@@ -1,6 +1,10 @@
 # crowe-lang — React-Native Computing Language (v0.2)
 
+![Crowe Lang Logo](vscode-extension/icons/icon.png)
+
 A powerful React-based computing language that transpiles to TypeScript/JSX with component-first syntax, cross-component state management, AI-native operations, and real-time data streams.
+
+**🌿 CroweOS Systems**: *Building the future of React development*
 
 ## 🚀 Quick Start
 

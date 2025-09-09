@@ -1,8 +1,13 @@
 # Crowe Language Support
 
-Official VS Code extension for the Crowe programming language - a React-native computing language with AI operations, state management, and real-time streams.
+Official VS Code extension for **crowe-lang** - a React-native computing language with AI operations, state management, and real-time streams.
 
-![Crowe Logo](https://raw.githubusercontent.com/MichaelCrowe11/crowe-lang/master/docs/crowe-logo.png)
+<div align="center">
+  <img src="https://raw.githubusercontent.com/MichaelCrowe11/crowe-lang/master/vscode-extension/icons/icon.png" alt="COS Logo" width="200"/>
+  
+  **CroweOS Systems**  
+  *Building the future of React development*
+</div>
 
 ## Features
 

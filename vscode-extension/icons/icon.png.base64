@@ -1,0 +1,15 @@
+# Crowe Logic Logo
+# This is a placeholder for the actual logo image
+# 
+# To add the logo:
+# 1. Save the Crowe Logic image as icon.png (128x128 pixels recommended)
+# 2. Place it in the vscode-extension/icons/ directory
+# 3. Update package.json to reference "icons/icon.png"
+#
+# The logo shows:
+# - Hexagonal shape with circuit/tree-like pattern
+# - "Crowe Logic" text below
+# - Teal/cyan glowing effect on dark background
+# 
+# This creates a professional, tech-focused brand identity
+# perfect for a React-based programming language with AI capabilities

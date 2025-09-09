@@ -3,9 +3,10 @@
   "displayName": "Crowe Language Support",
   "description": "Syntax highlighting, IntelliSense, and language server for Crowe language",
   "version": "0.2.0",
-  "publisher": "MichaelCrowe11",
+  "publisher": "CroweOS-Systems",
+  "icon": "icons/icon.png",
   "galleryBanner": {
-    "color": "#007acc",
+    "color": "#0a4d4d",
     "theme": "dark"
   },
   "repository": {
