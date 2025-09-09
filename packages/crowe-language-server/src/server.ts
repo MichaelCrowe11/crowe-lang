@@ -189,7 +189,7 @@ async function validateTextDocument(textDocument: TextDocument): Promise<void> {
   connection.sendDiagnostics({ uri: textDocument.uri, diagnostics });
 }
 
-connection.languages.onDiagnostic(async (params) => {
+connection.languages.diagnostics.on(async (params: any) => {
   const document = documents.get(params.textDocument.uri);
   if (document !== undefined) {
     return {

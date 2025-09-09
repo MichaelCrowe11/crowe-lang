@@ -6,7 +6,8 @@
   "brackets": [
     ["{", "}"],
     ["[", "]"],
-    ["(", ")"]
+    ["(", ")"],
+    ["<", ">"]
   ],
   "autoClosingPairs": [
     ["{", "}"],
@@ -25,5 +26,30 @@
     ["'", "'"],
     ["`", "`"],
     ["<", ">"]
+  ],
+  "folding": {
+    "markers": {
+      "start": "^\\s*//\\s*#region\\b",
+      "end": "^\\s*//\\s*#endregion\\b"
+    }
+  },
+  "wordPattern": "\\b[A-Za-z_][A-Za-z0-9_]*\\b",
+  "indentationRules": {
+    "increaseIndentPattern": "^(.*\\{[^}\"'`]*|.*\\([^)\"'`]*|.*\\[[^\\]\"'`]*)$",
+    "decreaseIndentPattern": "^(.*\\}.*|.*\\).*|.*\\].*)$"
+  },
+  "onEnterRules": [
+    {
+      "beforeText": "^\\s*render\\s*\\{\\s*$",
+      "action": { "indent": "indent" }
+    },
+    {
+      "beforeText": "^\\s*(component|store)\\s+[A-Za-z_][A-Za-z0-9_]*.*\\{\\s*$",
+      "action": { "indent": "indent" }
+    },
+    {
+      "beforeText": "^\\s*(action|computed|effect)\\s+[A-Za-z_][A-Za-z0-9_]*.*\\{\\s*$",
+      "action": { "indent": "indent" }
+    }
   ]
 }

@@ -3,7 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import { program } from 'commander';
 import * as chokidar from 'chokidar';
-import { compileCroweToReactTSX } from '../../crowe-compiler/src/index';
+import { compileCroweToReactTSXWithStats, clearCache, formatPerformanceStats } from '../../crowe-compiler/src/index';
 import { parseCroweWithErrors } from '../../crowe-compiler/src/parser';
 
 const packageJson = JSON.parse(fs.readFileSync(path.join(__dirname, '../../../package.json'), 'utf8'));
@@ -22,6 +22,9 @@ program
   .option('-w, --watch', 'Watch for changes and recompile')
   .option('--check', 'Check syntax only, don\'t generate output')
   .option('--source-maps', 'Generate source maps for debugging')
+  .option('--no-cache', 'Disable compilation cache')
+  .option('--profile', 'Enable performance profiling')
+  .option('--cache-dir <dir>', 'Cache directory', '.crowe-cache')
   .action(async (input, options) => {
     const compile = (inputFile: string) => {
       try {
@@ -45,10 +48,22 @@ program
           filename: inputFile,
           sourceMaps: options.sourceMaps,
           sourceMapPath: options.sourceMaps && options.output ? 
-            `${options.output}.map` : undefined
+            `${options.output}.map` : undefined,
+          useCache: !options.noCache,
+          enableProfiling: options.profile,
+          cacheDir: options.cacheDir
         };
         
-        const out = compileCroweToReactTSX(src, compileOptions);
+        const compileResult = compileCroweToReactTSXWithStats(src, compileOptions);
+        const out = compileResult.output;
+        
+        if (options.profile && compileResult.stats) {
+          const stats = compileResult.stats;
+          console.log(`⚡ Performance: parse=${stats.parseTime.toFixed(1)}ms, codegen=${stats.codegenTime.toFixed(1)}ms, total=${stats.totalTime.toFixed(1)}ms${stats.cacheHit ? ' (cached)' : ''}`);
+          if (stats.memoryUsed) {
+            console.log(`📊 Memory used: ${stats.memoryUsed}`);
+          }
+        }
         const base = path.basename(inputFile).replace(/\.crowe$/i, '') || 'Component';
         const finalOutput = out.replace(/export function\s+([A-Za-z_][A-Za-z0-9_]*)/, `export function ${base}`);
         
@@ -186,15 +201,84 @@ npm run build
     console.log('  npm run dev');
   });
 
+program
+  .command('cache')
+  .description('Cache management commands')
+  .option('--clear', 'Clear compilation cache')
+  .option('--stats', 'Show cache statistics')
+  .option('--dir <dir>', 'Cache directory', '.crowe-cache')
+  .action((options) => {
+    if (options.clear) {
+      console.log('🧹 Clearing compilation cache...');
+      clearCache();
+      console.log('✅ Cache cleared');
+    } else if (options.stats) {
+      console.log('📊 Performance Statistics:');
+      console.log(formatPerformanceStats());
+    } else {
+      console.log('Use --clear to clear cache or --stats to show performance statistics');
+    }
+  });
+
+program
+  .command('benchmark')
+  .description('Run compilation benchmarks')
+  .argument('[input]', 'Input .crowe file to benchmark', 'examples/hello-world.crowe')
+  .option('-n, --iterations <count>', 'Number of iterations', '10')
+  .action((input, options) => {
+    if (!fs.existsSync(input)) {
+      console.error(`❌ File not found: ${input}`);
+      process.exit(1);
+    }
+
+    const iterations = parseInt(options.iterations);
+    const src = fs.readFileSync(input, 'utf8');
+    
+    console.log(`🏁 Running benchmark: ${iterations} iterations of ${input}`);
+    console.log('');
+
+    const times: number[] = [];
+    
+    // Clear cache to ensure fair benchmarking
+    clearCache();
+    
+    for (let i = 0; i < iterations; i++) {
+      const start = performance.now();
+      
+      const result = compileCroweToReactTSXWithStats(src, { 
+        filename: input,
+        enableProfiling: true,
+        useCache: i > 0 // First run populates cache, subsequent runs use it
+      });
+      
+      const end = performance.now();
+      times.push(end - start);
+      
+      if (i === 0) {
+        console.log(`First run (no cache): ${(end - start).toFixed(2)}ms`);
+      }
+    }
+
+    const cacheRuns = times.slice(1);
+    if (cacheRuns.length > 0) {
+      const avgCached = cacheRuns.reduce((a, b) => a + b) / cacheRuns.length;
+      console.log(`Cached runs average: ${avgCached.toFixed(2)}ms`);
+      console.log(`Speedup: ${(times[0] / avgCached).toFixed(1)}x faster with cache`);
+    }
+
+    console.log('');
+    console.log(formatPerformanceStats());
+  });
+
 // For backward compatibility, if no command is provided, assume compile
-if (process.argv.length > 2 && !process.argv[2].startsWith('-') && !['compile', 'init', 'c'].includes(process.argv[2])) {
+if (process.argv.length > 2 && !process.argv[2].startsWith('-') && !['compile', 'init', 'c', 'cache', 'benchmark'].includes(process.argv[2])) {
   // Legacy mode: crowe file.crowe
   const input = process.argv[2];
   const output = process.argv[3];
   
   try {
     const src = fs.readFileSync(input, 'utf8');
-    const result = compileCroweToReactTSX(src);
+    const result = compileCroweToReactTSXWithStats(src, { filename: input }).output;
     const base = path.basename(input).replace(/\.crowe$/i, '') || 'Component';
     const finalOutput = result.replace(/export function\s+([A-Za-z_][A-Za-z0-9_]*)/, `export function ${base}`);
     

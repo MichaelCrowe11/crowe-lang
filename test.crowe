@@ -1,0 +1,1 @@
+component HelloWorld() { state message: string = "Hello, World\!"; render { <div>{message}</div> } }

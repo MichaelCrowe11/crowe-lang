@@ -4,6 +4,30 @@
   "description": "Syntax highlighting, IntelliSense, and language server for Crowe language",
   "version": "0.2.0",
   "publisher": "crowe-lang",
+  "galleryBanner": {
+    "color": "#007acc",
+    "theme": "dark"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MichaelCrowe11/crowe-lang.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MichaelCrowe11/crowe-lang/issues"
+  },
+  "homepage": "https://github.com/MichaelCrowe11/crowe-lang#readme",
+  "license": "MIT",
+  "keywords": [
+    "crowe",
+    "react",
+    "jsx",
+    "typescript",
+    "ai",
+    "streams",
+    "state-management",
+    "language-server",
+    "syntax-highlighting"
+  ],
   "engines": {
     "vscode": "^1.74.0"
   },
@@ -17,11 +41,7 @@
       "id": "crowe",
       "aliases": ["Crowe", "crowe"],
       "extensions": [".crowe"],
-      "configuration": "./language-configuration.json",
-      "icon": {
-        "light": "./icons/crowe-light.svg",
-        "dark": "./icons/crowe-dark.svg"
-      }
+      "configuration": "./language-configuration.json"
     }],
     "grammars": [{
       "language": "crowe",
@@ -46,6 +66,11 @@
           "type": "string",
           "default": "crowe",
           "description": "Path to the Crowe compiler executable"
+        },
+        "crowe.autoCompileOnSave": {
+          "type": "boolean",
+          "default": false,
+          "description": "Automatically compile Crowe files when saved"
         }
       }
     },

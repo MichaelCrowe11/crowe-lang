@@ -1,0 +1,9 @@
+{
+  "test.crowe": {
+    "source": "component HelloWorld() { state message: string = \"Hello, World\\!\"; render { <div>{message}</div> } }\n",
+    "sourceHash": "7a2cfda10d9ad2338d91bfb39429eb7f",
+    "compiledOutput": "import * as React from 'react';\n\nexport function HelloWorld() {\n  const [message, setMessage] = React.useState<string>(\"Hello, World\\!\");\n  return ( <div>{message}</div> );\n}\n",
+    "timestamp": 1757443493018,
+    "dependencies": []
+  }
+}
