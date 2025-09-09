@@ -1,0 +1,48 @@
+# Source files
+packages/*/src/**/*.ts
+!packages/*/src/**/*.d.ts
+
+# Test files
+**/__tests__/**
+**/*.test.ts
+**/*.spec.ts
+
+# Config files
+tsconfig.json
+jest.config.js
+.github/
+
+# Development files
+examples/
+docs/
+vscode-extension/
+*.vsix
+
+# Cache and logs
+.crowe-cache/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Build artifacts
+*.map
+coverage/
+.nyc_output/
+
+# Git
+.git/
+.gitignore
+
+# Development dependencies source
+node_modules/

@@ -221,6 +221,55 @@ program
   });
 
 program
+  .command('dev')
+  .description('Start development server with hot module replacement')
+  .option('-p, --port <port>', 'HMR server port', '3001')
+  .option('-h, --host <host>', 'HMR server host', 'localhost')
+  .option('-w, --watch-dir <dir>', 'Directory to watch', process.cwd())
+  .option('-o, --output-dir <dir>', 'Output directory for compiled files')
+  .action(async (options) => {
+    console.log('🚀 Starting Crowe development server with HMR...');
+    
+    try {
+      // Dynamic import to avoid circular dependency
+      const { startHMRServer, generateHMRClient } = await import('../../crowe-hmr/src/index');
+      
+      const server = startHMRServer({
+        port: parseInt(options.port),
+        host: options.host,
+        watchDir: options.watchDir,
+        verbose: true
+      });
+      
+      // Generate HMR client script
+      if (options.outputDir) {
+        const clientScript = generateHMRClient();
+        const clientPath = path.join(options.outputDir, 'crowe-hmr-client.js');
+        fs.writeFileSync(clientPath, clientScript);
+        console.log(`📄 HMR client script generated at: ${clientPath}`);
+      }
+      
+      console.log('');
+      console.log('📦 Add this to your HTML:');
+      console.log(`  <script src="crowe-hmr-client.js"></script>`);
+      console.log('');
+      console.log('✨ Hot Module Replacement is ready!');
+      console.log('   Edit .crowe files to see changes instantly');
+      console.log('');
+      
+      // Keep process alive
+      process.on('SIGINT', () => {
+        console.log('\n👋 Stopping development server...');
+        server.stop();
+        process.exit(0);
+      });
+    } catch (error) {
+      console.error('❌ Failed to start development server:', error);
+      process.exit(1);
+    }
+  });
+
+program
   .command('benchmark')
   .description('Run compilation benchmarks')
   .argument('[input]', 'Input .crowe file to benchmark', 'examples/hello-world.crowe')

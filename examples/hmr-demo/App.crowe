@@ -1,0 +1,160 @@
+component App() {
+  state count: number = 0;
+  state message: string = "Welcome to Crowe with HMR! 🔥";
+  state theme: string = "light";
+  
+  computed doubleCount: number {
+    return count * 2;
+  }
+  
+  action increment() {
+    count = count + 1;
+  }
+  
+  action decrement() {
+    count = count - 1;
+  }
+  
+  action toggleTheme() {
+    theme = theme === "light" ? "dark" : "light";
+  }
+  
+  render {
+    <div style={{
+      minHeight: "100vh",
+      padding: 40,
+      fontFamily: "system-ui, -apple-system, sans-serif",
+      background: theme === "light" ? "#f0f4f8" : "#1a202c",
+      color: theme === "light" ? "#2d3748" : "#f7fafc",
+      transition: "all 0.3s ease"
+    }}>
+      <div style={{
+        maxWidth: 600,
+        margin: "0 auto",
+        textAlign: "center"
+      }}>
+        <h1 style={{
+          fontSize: 48,
+          marginBottom: 20,
+          background: "linear-gradient(135deg, #667eea, #48bb78)",
+          WebkitBackgroundClip: "text",
+          WebkitTextFillColor: "transparent",
+          backgroundClip: "text"
+        }}>
+          {message}
+        </h1>
+        
+        <div style={{
+          background: theme === "light" ? "white" : "#2d3748",
+          borderRadius: 16,
+          padding: 32,
+          boxShadow: "0 10px 40px rgba(0,0,0,0.1)",
+          marginBottom: 24
+        }}>
+          <p style={{
+            fontSize: 24,
+            marginBottom: 24,
+            color: theme === "light" ? "#4a5568" : "#cbd5e0"
+          }}>
+            Count: <strong style={{ fontSize: 36, color: "#667eea" }}>{count}</strong>
+          </p>
+          
+          <p style={{
+            fontSize: 18,
+            marginBottom: 24,
+            color: theme === "light" ? "#718096" : "#a0aec0"
+          }}>
+            Double: <strong>{doubleCount}</strong>
+          </p>
+          
+          <div style={{ display: "flex", gap: 12, justifyContent: "center" }}>
+            <button 
+              onClick={() => decrement()}
+              style={{
+                padding: "12px 24px",
+                fontSize: 18,
+                borderRadius: 8,
+                border: "none",
+                background: "#fc8181",
+                color: "white",
+                cursor: "pointer",
+                transition: "transform 0.2s",
+                fontWeight: 600
+              }}
+              onMouseEnter={(e) => e.target.style.transform = "scale(1.05)"}
+              onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+            >
+              - Decrement
+            </button>
+            
+            <button 
+              onClick={() => increment()}
+              style={{
+                padding: "12px 24px",
+                fontSize: 18,
+                borderRadius: 8,
+                border: "none",
+                background: "#48bb78",
+                color: "white",
+                cursor: "pointer",
+                transition: "transform 0.2s",
+                fontWeight: 600
+              }}
+              onMouseEnter={(e) => e.target.style.transform = "scale(1.05)"}
+              onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+            >
+              + Increment
+            </button>
+          </div>
+        </div>
+        
+        <button 
+          onClick={() => toggleTheme()}
+          style={{
+            padding: "12px 24px",
+            fontSize: 16,
+            borderRadius: 8,
+            border: `2px solid ${theme === "light" ? "#4a5568" : "#cbd5e0"}`,
+            background: "transparent",
+            color: theme === "light" ? "#4a5568" : "#cbd5e0",
+            cursor: "pointer",
+            transition: "all 0.2s",
+            fontWeight: 600
+          }}
+        >
+          🌓 Toggle Theme
+        </button>
+        
+        <div style={{
+          marginTop: 48,
+          padding: 24,
+          background: theme === "light" ? "#edf2f7" : "#2d3748",
+          borderRadius: 12,
+          textAlign: "left"
+        }}>
+          <h3 style={{ marginBottom: 12, color: "#667eea" }}>
+            ✨ Try Hot Module Replacement!
+          </h3>
+          <ul style={{ 
+            listStyle: "none", 
+            padding: 0,
+            color: theme === "light" ? "#4a5568" : "#a0aec0"
+          }}>
+            <li style={{ marginBottom: 8 }}>
+              ✏️ Edit this file and save to see instant updates
+            </li>
+            <li style={{ marginBottom: 8 }}>
+              🎨 Change colors, text, or layout
+            </li>
+            <li style={{ marginBottom: 8 }}>
+              💾 Component state is preserved during updates
+            </li>
+            <li>
+              🚀 No page refresh needed!
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  }
+}

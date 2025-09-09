@@ -3,7 +3,7 @@
   "displayName": "Crowe Language Support",
   "description": "Syntax highlighting, IntelliSense, and language server for Crowe language",
   "version": "0.2.0",
-  "publisher": "crowe-lang",
+  "publisher": "MichaelCrowe11",
   "galleryBanner": {
     "color": "#007acc",
     "theme": "dark"
