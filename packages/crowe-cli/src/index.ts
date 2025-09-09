@@ -221,6 +221,145 @@ program
   });
 
 program
+  .command('install-extension')
+  .description('Install the Crowe VS Code extension')
+  .option('--local', 'Install from local .vsix file')
+  .option('--marketplace', 'Install from VS Code marketplace (after publishing)')
+  .action(async (options) => {
+    const { execSync } = require('child_process');
+    
+    try {
+      // Check if VS Code is installed
+      try {
+        execSync('code --version', { stdio: 'ignore' });
+      } catch {
+        console.error('❌ VS Code is not installed or not in PATH');
+        console.log('   Please install VS Code from: https://code.visualstudio.com');
+        process.exit(1);
+      }
+      
+      if (options.marketplace) {
+        console.log('📦 Installing Crowe extension from VS Code marketplace...');
+        try {
+          execSync('code --install-extension MichaelCrowe11.crowe-lang', { stdio: 'inherit' });
+          console.log('✅ Extension installed successfully from marketplace!');
+        } catch (error) {
+          console.error('❌ Failed to install from marketplace');
+          console.log('   The extension may not be published yet.');
+          console.log('   Try installing locally with: crowe install-extension --local');
+        }
+      } else {
+        // Install from local .vsix file
+        console.log('📦 Installing Crowe extension from local package...');
+        
+        // Look for .vsix file
+        const vsixFiles = fs.readdirSync(process.cwd()).filter((f: string) => f.endsWith('.vsix'));
+        let vsixPath: string;
+        
+        if (vsixFiles.length === 0) {
+          // Try to find in common locations
+          const possiblePaths = [
+            path.join(process.cwd(), 'crowe-lang-vscode-0.2.0.vsix'),
+            path.join(process.cwd(), 'vscode-extension', 'crowe-lang-0.2.0.vsix'),
+            path.join(__dirname, '..', '..', '..', 'crowe-lang-vscode-0.2.0.vsix'),
+            path.join(__dirname, '..', '..', '..', 'vscode-extension', 'crowe-lang-0.2.0.vsix')
+          ];
+          
+          const found = possiblePaths.find((p: string) => fs.existsSync(p));
+          if (!found) {
+            console.error('❌ No .vsix file found');
+            console.log('   Build the extension first:');
+            console.log('     cd vscode-extension');
+            console.log('     npm install');
+            console.log('     vsce package');
+            process.exit(1);
+          }
+          vsixPath = found;
+        } else {
+          vsixPath = vsixFiles[0];
+        }
+        
+        console.log(`📄 Found extension package: ${path.basename(vsixPath)}`);
+        execSync(`code --install-extension "${vsixPath}"`, { stdio: 'inherit' });
+        console.log('✅ Extension installed successfully!');
+      }
+      
+      console.log('');
+      console.log('🎉 Crowe Language extension is ready to use!');
+      console.log('   1. Open VS Code');
+      console.log('   2. Create a .crowe file');
+      console.log('   3. Start coding with syntax highlighting and IntelliSense!');
+      
+    } catch (error) {
+      console.error('❌ Installation failed:', error);
+      process.exit(1);
+    }
+  });
+
+program
+  .command('extension-status')
+  .description('Check if Crowe VS Code extension is installed')
+  .action(() => {
+    const { execSync } = require('child_process');
+    
+    try {
+      const output = execSync('code --list-extensions', { encoding: 'utf-8' });
+      const extensions = output.split('\n').map((e: string) => e.trim()).filter(Boolean);
+      
+      // Check for both possible extension IDs (local and marketplace)
+      const isInstalled = extensions.includes('MichaelCrowe11.crowe-lang') || 
+                          extensions.includes('crowe-lang.crowe-lang');
+      
+      if (isInstalled) {
+        console.log('✅ Crowe Language extension is installed');
+        const id = extensions.includes('MichaelCrowe11.crowe-lang') ? 
+                   'MichaelCrowe11.crowe-lang' : 'crowe-lang.crowe-lang';
+        console.log(`   Extension ID: ${id}`);
+        console.log('   Version: 0.2.0');
+      } else {
+        console.log('❌ Crowe Language extension is not installed');
+        console.log('');
+        console.log('Install it with one of these commands:');
+        console.log('  crowe install-extension --local       (from local .vsix file)');
+        console.log('  crowe install-extension --marketplace (from VS Code marketplace)');
+      }
+    } catch (error) {
+      console.error('❌ Failed to check extension status');
+      console.log('   Make sure VS Code is installed and in PATH');
+    }
+  });
+
+program
+  .command('uninstall-extension')
+  .description('Uninstall the Crowe VS Code extension')
+  .action(() => {
+    const { execSync } = require('child_process');
+    
+    try {
+      // Check which extension ID is installed
+      const output = execSync('code --list-extensions', { encoding: 'utf-8' });
+      const extensions = output.split('\n').map((e: string) => e.trim()).filter(Boolean);
+      
+      let extensionId: string | null = null;
+      if (extensions.includes('MichaelCrowe11.crowe-lang')) {
+        extensionId = 'MichaelCrowe11.crowe-lang';
+      } else if (extensions.includes('crowe-lang.crowe-lang')) {
+        extensionId = 'crowe-lang.crowe-lang';
+      }
+      
+      if (extensionId) {
+        console.log('🗑️  Uninstalling Crowe extension...');
+        execSync(`code --uninstall-extension ${extensionId}`, { stdio: 'inherit' });
+        console.log('✅ Extension uninstalled successfully');
+      } else {
+        console.log('❌ Crowe Language extension is not installed');
+      }
+    } catch (error) {
+      console.error('❌ Failed to uninstall extension:', error);
+    }
+  });
+
+program
   .command('dev')
   .description('Start development server with hot module replacement')
   .option('-p, --port <port>', 'HMR server port', '3001')
@@ -320,7 +459,8 @@ program
   });
 
 // For backward compatibility, if no command is provided, assume compile
-if (process.argv.length > 2 && !process.argv[2].startsWith('-') && !['compile', 'init', 'c', 'cache', 'benchmark'].includes(process.argv[2])) {
+const knownCommands = ['compile', 'init', 'c', 'cache', 'benchmark', 'dev', 'install-extension', 'extension-status', 'uninstall-extension'];
+if (process.argv.length > 2 && !process.argv[2].startsWith('-') && !knownCommands.includes(process.argv[2])) {
   // Legacy mode: crowe file.crowe
   const input = process.argv[2];
   const output = process.argv[3];
