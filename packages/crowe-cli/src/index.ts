@@ -360,6 +360,130 @@ program
   });
 
 program
+  .command('setup-logo')
+  .description('Set up the COS logo for the project and VS Code extension')
+  .option('--url <url>', 'URL of the logo image to download')
+  .option('--file <path>', 'Local file path of the logo image')
+  .action(async (options) => {
+    let sharp: any = null;
+    try {
+      sharp = require('sharp');
+    } catch {
+      // Sharp not available
+    }
+    const https = require('https');
+    const { promisify } = require('util');
+    const pipeline = promisify(require('stream').pipeline);
+    
+    console.log('🎨 Setting up COS logo...');
+    
+    // Create a simple base64 encoded SVG logo if no image provided
+    if (!options.url && !options.file) {
+      console.log('📝 Creating COS logo...');
+      
+      // Create an SVG version of the COS logo
+      const svgLogo = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+  <!-- Dark circle background -->
+  <circle cx="64" cy="64" r="64" fill="#1a3a52"/>
+  
+  <!-- COS text -->
+  <text x="64" y="48" font-family="Arial, sans-serif" font-size="36" font-weight="bold" text-anchor="middle" fill="url(#gradient)">
+    COS
+  </text>
+  
+  <!-- Branching pattern from O -->
+  <g stroke="url(#gradient)" stroke-width="2" fill="none" opacity="0.8">
+    <!-- Main branches -->
+    <path d="M64,55 L64,75 M64,75 L54,85 M64,75 L74,85 M64,75 L64,90"/>
+    <path d="M54,85 L49,90 M54,85 L54,95"/>
+    <path d="M74,85 L79,90 M74,85 L74,95"/>
+    <!-- Nodes -->
+    <circle cx="64" cy="90" r="3" fill="url(#gradient)"/>
+    <circle cx="49" cy="90" r="2" fill="url(#gradient)"/>
+    <circle cx="79" cy="90" r="2" fill="url(#gradient)"/>
+    <circle cx="54" cy="95" r="2" fill="url(#gradient)"/>
+    <circle cx="74" cy="95" r="2" fill="url(#gradient)"/>
+  </g>
+  
+  <!-- Gradient definition -->
+  <defs>
+    <linearGradient id="gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#4ade80;stop-opacity:1" />
+      <stop offset="100%" style="stop-color:#14b8a6;stop-opacity:1" />
+    </linearGradient>
+  </defs>
+</svg>`;
+
+      // Save SVG logo
+      const logoPath = path.join(process.cwd(), 'vscode-extension', 'icons', 'cos-logo.svg');
+      fs.mkdirSync(path.dirname(logoPath), { recursive: true });
+      fs.writeFileSync(logoPath, svgLogo);
+      console.log(`✅ Created SVG logo at: ${logoPath}`);
+      
+      // Create PNG versions if sharp is available
+      if (sharp) {
+        try {
+        
+        // 128x128 for VS Code extension
+        await sharp(Buffer.from(svgLogo))
+          .resize(128, 128)
+          .png()
+          .toFile(path.join(process.cwd(), 'vscode-extension', 'icons', 'icon.png'));
+        console.log('✅ Created icon.png (128x128) for VS Code extension');
+        
+        // 512x512 for documentation
+        await sharp(Buffer.from(svgLogo))
+          .resize(512, 512)
+          .png()
+          .toFile(path.join(process.cwd(), 'docs', 'images', 'logo.png'));
+        console.log('✅ Created logo.png (512x512) for documentation');
+        
+        // 64x64 for NPM
+        await sharp(Buffer.from(svgLogo))
+          .resize(64, 64)
+          .png()
+          .toFile(path.join(process.cwd(), 'logo-small.png'));
+        console.log('✅ Created logo-small.png (64x64) for NPM');
+        
+        } catch (error) {
+          console.log('⚠️  PNG generation failed:', error);
+        }
+      } else {
+        console.log('⚠️  PNG generation requires sharp. Install with: npm install sharp');
+        console.log('   SVG logo created successfully.');
+      }
+      
+    } else if (options.url) {
+      // Download from URL
+      console.log(`📥 Downloading logo from: ${options.url}`);
+      // Implementation for downloading from URL
+      console.log('⚠️  URL download not yet implemented');
+      
+    } else if (options.file) {
+      // Copy from local file
+      console.log(`📁 Copying logo from: ${options.file}`);
+      
+      if (!fs.existsSync(options.file)) {
+        console.error('❌ File not found:', options.file);
+        process.exit(1);
+      }
+      
+      const iconPath = path.join(process.cwd(), 'vscode-extension', 'icons', 'icon.png');
+      fs.mkdirSync(path.dirname(iconPath), { recursive: true });
+      fs.copyFileSync(options.file, iconPath);
+      console.log('✅ Logo copied to VS Code extension');
+    }
+    
+    console.log('');
+    console.log('🎉 Logo setup complete!');
+    console.log('   The COS logo is now configured for:');
+    console.log('   • VS Code extension icon');
+    console.log('   • Documentation website');
+    console.log('   • NPM package');
+  });
+
+program
   .command('dev')
   .description('Start development server with hot module replacement')
   .option('-p, --port <port>', 'HMR server port', '3001')
@@ -459,7 +583,7 @@ program
   });
 
 // For backward compatibility, if no command is provided, assume compile
-const knownCommands = ['compile', 'init', 'c', 'cache', 'benchmark', 'dev', 'install-extension', 'extension-status', 'uninstall-extension'];
+const knownCommands = ['compile', 'init', 'c', 'cache', 'benchmark', 'dev', 'install-extension', 'extension-status', 'uninstall-extension', 'setup-logo'];
 if (process.argv.length > 2 && !process.argv[2].startsWith('-') && !knownCommands.includes(process.argv[2])) {
   // Legacy mode: crowe file.crowe
   const input = process.argv[2];

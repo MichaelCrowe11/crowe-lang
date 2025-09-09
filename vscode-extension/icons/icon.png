@@ -1,0 +1,5 @@
+# PNG Placeholder
+# The actual PNG will be generated from cos-logo.svg
+# You can convert it using online tools or image editors
+# Or install sharp: npm install sharp
+# Then run: crowe setup-logo
