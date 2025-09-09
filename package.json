@@ -1,22 +1,60 @@
 {
   "name": "crowe-lang",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.2.0",
+  "description": "A React-based computing language with AI-native operations, state management, and real-time data streams",
+  "main": "dist/packages/crowe-compiler/src/index.js",
+  "types": "dist/packages/crowe-compiler/src/index.d.ts",
+  "bin": {
+    "crowe": "dist/packages/crowe-cli/src/index.js"
+  },
+  "files": [
+    "dist/packages/",
+    "README.md",
+    "LICENSE"
+  ],
   "directories": {
-    "example": "examples"
+    "example": "examples",
+    "test": "__tests__"
   },
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "compile": "npx ts-node packages/crowe-cli/src/index.ts",
     "build": "tsc",
-    "dev": "tsc --watch"
+    "dev": "tsc --watch",
+    "prepare": "npm run build",
+    "prepack": "npm run test && npm run build"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
-  "description": "",
+  "keywords": [
+    "react",
+    "compiler",
+    "transpiler",
+    "ai",
+    "language",
+    "jsx",
+    "typescript",
+    "state-management",
+    "real-time",
+    "streams"
+  ],
+  "author": "Michael Crowe <email@example.com>",
+  "license": "MIT",
+  "homepage": "https://github.com/MichaelCrowe11/crowe-lang#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MichaelCrowe11/crowe-lang.git"
+  },
+  "bugs": {
+    "url": "https://github.com/MichaelCrowe11/crowe-lang/issues"
+  },
   "devDependencies": {
+    "@types/jest": "^30.0.0",
     "@types/node": "^24.3.1",
+    "chokidar": "^4.0.3",
+    "commander": "^14.0.0",
+    "jest": "^30.1.3",
+    "ts-jest": "^29.4.1",
     "ts-node": "^10.9.2",
     "typescript": "^5.9.2"
   }

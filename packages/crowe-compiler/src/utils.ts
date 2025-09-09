@@ -52,3 +52,19 @@ export function readBalanced(src: string, startIndex: number, open = '{', close 
 export function trimSemicolon(s: string): string {
   return s.trim().replace(/;\s*$/, '');
 }
+
+export function getLineColumn(source: string, index: number): { line: number; column: number } {
+  let line = 1;
+  let column = 1;
+  
+  for (let i = 0; i < index && i < source.length; i++) {
+    if (source[i] === '\n') {
+      line++;
+      column = 1;
+    } else {
+      column++;
+    }
+  }
+  
+  return { line, column };
+}

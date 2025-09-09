@@ -9,5 +9,6 @@
     "esModuleInterop": true,
     "skipLibCheck": true
   },
-  "include": ["packages/**/*", "examples/**/*"]
+  "include": ["packages/**/*"],
+  "exclude": ["**/__tests__/**", "**/*.test.ts", "examples/**/*"]
 }

@@ -1,7 +1,31 @@
 import { CroweFile, Component, Store, Section, StoreSection, StateDecl, ComputedDecl, EffectDecl, ActionDecl, RenderBlock, StreamDecl, AIDecl } from './ast';
-import { stripComments, readBalanced, trimSemicolon } from './utils';
+import { stripComments, readBalanced, trimSemicolon, getLineColumn } from './utils';
+import { ParseError, ErrorCollector } from './errors';
 
-export function parseCrowe(src: string): CroweFile {
+export interface ParseResult {
+  ast?: CroweFile;
+  errors: ErrorCollector;
+}
+
+export function parseCroweWithErrors(src: string, filename?: string): ParseResult {
+  const errors = new ErrorCollector();
+  try {
+    const ast = parseCrowe(src, filename, errors);
+    return { ast, errors };
+  } catch (e) {
+    if (e instanceof ParseError) {
+      errors.addError(e);
+    } else {
+      errors.addError(new ParseError(
+        e instanceof Error ? e.message : String(e),
+        1, 1, filename, src
+      ));
+    }
+    return { ast: undefined, errors };
+  }
+}
+
+export function parseCrowe(src: string, filename?: string, errors?: ErrorCollector): CroweFile {
   const code = stripComments(src);
   const stores: Store[] = [];
   const components: Component[] = [];
