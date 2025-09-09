@@ -1,0 +1,91 @@
+// Real-time Analytics Dashboard with AI insights
+store AnalyticsStore {
+  state metrics: any[] = [];
+  state filter: string = "all";
+  
+  stream liveData: any = "/api/metrics/stream";
+  ai insightModel: TextGenerator = model("gpt-3.5-turbo");
+  
+  computed filteredMetrics: any[] {
+    return filter === "all" 
+      ? metrics 
+      : metrics.filter(m => m.category === filter);
+  }
+  
+  action updateFilter(newFilter: string) {
+    filter = newFilter;
+  }
+  
+  action async generateInsight(metric: any) {
+    if (!insightModel) return "Loading AI...";
+    const prompt = `Analyze this metric: ${JSON.stringify(metric)}`;
+    return await insightModel.generate(prompt);
+  }
+}
+
+component MetricCard(props: { metric: any }) {
+  state expanded: boolean = false;
+  state insight: string = "";
+  
+  effect onMount {
+    generateInsight();
+  }
+  
+  action async generateInsight() {
+    const store = useAnalyticsStore();
+    insight = await store.generateInsight(props.metric);
+  }
+  
+  render {
+    <div className="metric-card">
+      <h3>{props.metric.name}</h3>
+      <div className="value">{props.metric.value}</div>
+      <button onClick={() => expanded = !expanded}>
+        {expanded ? "Hide" : "Show"} Insight
+      </button>
+      {expanded && <div className="insight">{insight}</div>}
+    </div>
+  }
+}
+
+component Dashboard() {
+  state selectedCategory: string = "all";
+  
+  computed store: any { return useAnalyticsStore(); }
+  
+  effect onMount {
+    store.connectLiveData();
+  }
+  
+  render {
+    <div className="dashboard">
+      <header>
+        <h1>Analytics Dashboard</h1>
+        <select 
+          value={selectedCategory} 
+          onChange={(e) => {
+            selectedCategory = e.target.value;
+            store.updateFilter(e.target.value);
+          }}
+        >
+          <option value="all">All Metrics</option>
+          <option value="revenue">Revenue</option>
+          <option value="users">Users</option>
+          <option value="performance">Performance</option>
+        </select>
+      </header>
+      
+      <div className="metrics-grid">
+        {store.filteredMetrics.map(metric => (
+          <MetricCard key={metric.id} metric={metric} />
+        ))}
+      </div>
+      
+      {store.liveData && (
+        <div className="live-indicator">
+          🔴 Live • Last update: {new Date().toLocaleTimeString()}
+        </div>
+      )}
+    </div>
+  }
+}

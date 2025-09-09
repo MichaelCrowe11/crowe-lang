@@ -1,10 +1,33 @@
-import { CroweFile, Component, Section, StateDecl, ComputedDecl, EffectDecl, ActionDecl, RenderBlock } from './ast';
+import { CroweFile, Component, Store, Section, StateDecl, ComputedDecl, EffectDecl, ActionDecl, RenderBlock, StreamDecl, AIDecl } from './ast';
 
 export function generateReactTSX(ast: CroweFile): string {
   const lines: string[] = [];
   lines.push(`import * as React from 'react';`);
+  
+  // Check if we need Zustand for stores
+  if (ast.stores && ast.stores.length > 0) {
+    lines.push(`import { create } from 'zustand';`);
+  }
+  
+  // Check if we have AI operations
+  const hasAI = ast.components.some(c => c.sections.some(s => s.kind === 'ai')) ||
+                ast.stores?.some(s => s.sections.some(sec => sec.kind === 'ai'));
+  
+  if (hasAI) {
+    lines.push(`import { loadModel, inferenceSession } from '@crowe/ai-runtime';`);
+  }
+  
   lines.push('');
 
+  // Emit stores first (they become Zustand stores)
+  if (ast.stores) {
+    for (const store of ast.stores) {
+      emitStore(store, lines);
+      lines.push('');
+    }
+  }
+
+  // Then emit components
   for (const comp of ast.components) {
     emitComponent(comp, lines);
     lines.push('');
@@ -25,6 +48,26 @@ function emitComponent(comp: Component, out: string[]) {
     const setter = 'set' + capitalize(st.name);
     stateNames.push(st.name); setters[st.name] = setter;
     out.push(`  const [${st.name}, ${setter}] = React.useState<${st.type ?? 'any'}>(${st.init});`);
+  }
+
+  // Handle AI models
+  for (const s of comp.sections) if (s.kind === 'ai') {
+    const ai = s as AIDecl;
+    out.push(`  const [${ai.name}, set${capitalize(ai.name)}] = React.useState(null);`);
+    out.push(`  React.useEffect(() => {`);
+    out.push(`    loadModel('${ai.model}').then(set${capitalize(ai.name)});`);
+    out.push(`  }, []);`);
+  }
+  
+  // Handle streams
+  for (const s of comp.sections) if (s.kind === 'stream') {
+    const stream = s as StreamDecl;
+    out.push(`  const [${stream.name}, set${capitalize(stream.name)}] = React.useState<${stream.type || 'any'}>(null);`);
+    out.push(`  React.useEffect(() => {`);
+    out.push(`    const source = new EventSource(${stream.source});`);
+    out.push(`    source.onmessage = (e) => set${capitalize(stream.name)}(JSON.parse(e.data));`);
+    out.push(`    return () => source.close();`);
+    out.push(`  }, []);`);
   }
 
   // Second pass: computed -> either IIFE or useMemo
@@ -80,3 +123,67 @@ function inlineReturn(body: string): string {
 }
 
 function capitalize(s: string): string { return s.charAt(0).toUpperCase() + s.slice(1); }
+
+function emitStore(store: Store, out: string[]) {
+  out.push(`export const use${store.name} = create((set, get) => ({`);
+  
+  const stateFields: string[] = [];
+  const actions: string[] = [];
+  const computedGetters: string[] = [];
+  
+  for (const section of store.sections) {
+    switch (section.kind) {
+      case 'state':
+        const st = section as StateDecl;
+        stateFields.push(`  ${st.name}: ${st.init},`);
+        break;
+        
+      case 'computed':
+        const comp = section as ComputedDecl;
+        // Store computed as getter
+        computedGetters.push(`  get ${comp.name}() { ${inlineReturn(comp.body)} },`);
+        break;
+        
+      case 'action':
+        const act = section as ActionDecl;
+        const asyncPrefix = act.isAsync ? 'async ' : '';
+        // Transform state assignments in store actions
+        const transformedBody = transformStoreActions(act.body);
+        actions.push(`  ${asyncPrefix}${act.name}: (${act.params}) => { ${transformedBody} },`);
+        break;
+        
+      case 'stream':
+        const stream = section as StreamDecl;
+        // Initialize WebSocket/EventSource in store
+        stateFields.push(`  ${stream.name}: null as ${stream.type || 'any'},`);
+        actions.push(`  connect${capitalize(stream.name)}: () => {
+    const source = new EventSource(${stream.source});
+    source.onmessage = (e) => set({ ${stream.name}: JSON.parse(e.data) });
+    return () => source.close();
+  },`);
+        break;
+        
+      case 'ai':
+        const ai = section as AIDecl;
+        stateFields.push(`  ${ai.name}: null as any,`);
+        actions.push(`  load${capitalize(ai.name)}: async () => {
+    const model = await loadModel('${ai.model}');
+    set({ ${ai.name}: model });
+  },`);
+        break;
+    }
+  }
+  
+  // Emit all parts
+  stateFields.forEach(f => out.push(f));
+  computedGetters.forEach(g => out.push(g));
+  actions.forEach(a => out.push(a));
+  
+  out.push(`}));`);
+}
+
+function transformStoreActions(body: string): string {
+  // Transform `state = value` to `set({ state: value })`
+  // This is a simplified transform - real implementation would use AST
+  return body.replace(/(\w+)\s*=\s*([^;]+);/g, 'set({ $1: $2 });');
+}

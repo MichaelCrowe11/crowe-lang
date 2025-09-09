@@ -1,0 +1,24 @@
+{
+  "name": "crowe-lang",
+  "displayName": "Crowe Language Support",
+  "description": "Syntax highlighting and IntelliSense for Crowe language",
+  "version": "0.1.0",
+  "publisher": "crowe-lang",
+  "engines": {
+    "vscode": "^1.74.0"
+  },
+  "categories": ["Programming Languages"],
+  "contributes": {
+    "languages": [{
+      "id": "crowe",
+      "aliases": ["Crowe", "crowe"],
+      "extensions": [".crowe"],
+      "configuration": "./language-configuration.json"
+    }],
+    "grammars": [{
+      "language": "crowe",
+      "scopeName": "source.crowe",
+      "path": "./syntaxes/crowe.tmLanguage.json"
+    }]
+  }
+}

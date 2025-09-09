@@ -1,0 +1,134 @@
+// AI-powered chat application with real-time messaging
+store ChatStore {
+  state messages: Message[] = [];
+  state currentUser: User = { id: "user1", name: "You" };
+  state typing: boolean = false;
+  
+  stream messageStream: Message = "wss://chat.example.com/messages";
+  ai chatAssistant: TextGenerator = model("claude-instant");
+  ai sentimentAnalyzer: Classifier = model("sentiment-analysis");
+  
+  action sendMessage(text: string) {
+    const message = {
+      id: Date.now(),
+      text,
+      user: currentUser,
+      timestamp: new Date(),
+      sentiment: null
+    };
+    messages = [...messages, message];
+    analyzeSentiment(message.id);
+  }
+  
+  action async analyzeSentiment(messageId: number) {
+    const message = messages.find(m => m.id === messageId);
+    if (message && sentimentAnalyzer) {
+      const sentiment = await sentimentAnalyzer.classify(message.text);
+      messages = messages.map(m => 
+        m.id === messageId ? { ...m, sentiment } : m
+      );
+    }
+  }
+  
+  action async generateReply(context: string) {
+    if (!chatAssistant) return;
+    typing = true;
+    const reply = await chatAssistant.generate(
+      `Context: ${context}\nGenerate a helpful reply:`
+    );
+    typing = false;
+    sendMessage(reply);
+  }
+}
+
+component MessageBubble(props: { message: Message; isOwn: boolean }) {
+  computed sentimentColor: string {
+    if (!props.message.sentiment) return "gray";
+    const score = props.message.sentiment.score;
+    if (score > 0.6) return "green";
+    if (score < -0.6) return "red";
+    return "yellow";
+  }
+  
+  render {
+    <div className={`message ${props.isOwn ? "own" : "other"}`}>
+      <div className="bubble">
+        <p>{props.message.text}</p>
+        <span className="time">
+          {props.message.timestamp.toLocaleTimeString()}
+        </span>
+        {props.message.sentiment && (
+          <span 
+            className="sentiment" 
+            style={{ color: sentimentColor }}
+          >
+            {props.message.sentiment.label}
+          </span>
+        )}
+      </div>
+    </div>
+  }
+}
+
+component ChatApp() {
+  state inputText: string = "";
+  state showAssistant: boolean = false;
+  
+  computed store: any { return useChatStore(); }
+  
+  effect onMount {
+    store.connectMessageStream();
+    store.loadChatAssistant();
+    store.loadSentimentAnalyzer();
+  }
+  
+  action handleSend() {
+    if (inputText.trim()) {
+      store.sendMessage(inputText);
+      inputText = "";
+    }
+  }
+  
+  action async requestAssistance() {
+    const context = store.messages
+      .slice(-5)
+      .map(m => `${m.user.name}: ${m.text}`)
+      .join("\n");
+    await store.generateReply(context);
+  }
+  
+  render {
+    <div className="chat-app">
+      <div className="messages">
+        {store.messages.map(msg => (
+          <MessageBubble 
+            key={msg.id}
+            message={msg}
+            isOwn={msg.user.id === store.currentUser.id}
+          />
+        ))}
+        {store.typing && (
+          <div className="typing-indicator">
+            AI is typing...
+          </div>
+        )}
+      </div>
+      
+      <div className="input-area">
+        <input
+          value={inputText}
+          onChange={(e) => inputText = e.target.value}
+          onKeyPress={(e) => e.key === "Enter" && handleSend()}
+          placeholder="Type a message..."
+        />
+        <button onClick={() => handleSend()}>Send</button>
+        <button 
+          onClick={() => requestAssistance()}
+          disabled={store.typing}
+        >
+          🤖 AI Assist
+        </button>
+      </div>
+    </div>
+  }
+}

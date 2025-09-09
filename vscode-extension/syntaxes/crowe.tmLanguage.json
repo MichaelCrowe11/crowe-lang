@@ -1,0 +1,159 @@
+{
+  "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
+  "name": "Crowe",
+  "patterns": [
+    { "include": "#comments" },
+    { "include": "#strings" },
+    { "include": "#keywords" },
+    { "include": "#components" },
+    { "include": "#stores" },
+    { "include": "#jsx" },
+    { "include": "#types" },
+    { "include": "#numbers" },
+    { "include": "#operators" }
+  ],
+  "repository": {
+    "keywords": {
+      "patterns": [{
+        "name": "keyword.control.crowe",
+        "match": "\\b(component|store|state|computed|effect|action|render|stream|ai|onMount|async|return|if|else|for|while|const|let|var)\\b"
+      }]
+    },
+    "components": {
+      "patterns": [{
+        "match": "\\b(component)\\s+([A-Za-z][A-Za-z0-9_]*)\\b",
+        "captures": {
+          "1": { "name": "keyword.control.crowe" },
+          "2": { "name": "entity.name.class.crowe" }
+        }
+      }]
+    },
+    "stores": {
+      "patterns": [{
+        "match": "\\b(store)\\s+([A-Za-z][A-Za-z0-9_]*)\\b",
+        "captures": {
+          "1": { "name": "keyword.control.crowe" },
+          "2": { "name": "entity.name.class.crowe" }
+        }
+      }]
+    },
+    "types": {
+      "patterns": [{
+        "name": "support.type.crowe",
+        "match": "\\b(string|number|boolean|any|void|null|undefined|object|Function)\\b"
+      }]
+    },
+    "jsx": {
+      "patterns": [
+        {
+          "name": "meta.tag.jsx",
+          "begin": "(<)([A-Za-z][A-Za-z0-9_]*)",
+          "beginCaptures": {
+            "1": { "name": "punctuation.definition.tag.begin.jsx" },
+            "2": { "name": "entity.name.tag.jsx" }
+          },
+          "end": "(>)",
+          "endCaptures": {
+            "1": { "name": "punctuation.definition.tag.end.jsx" }
+          },
+          "patterns": [
+            { "include": "#jsx-attributes" }
+          ]
+        },
+        {
+          "name": "meta.tag.close.jsx",
+          "match": "(</)([A-Za-z][A-Za-z0-9_]*)(>)",
+          "captures": {
+            "1": { "name": "punctuation.definition.tag.begin.jsx" },
+            "2": { "name": "entity.name.tag.jsx" },
+            "3": { "name": "punctuation.definition.tag.end.jsx" }
+          }
+        }
+      ]
+    },
+    "jsx-attributes": {
+      "patterns": [
+        {
+          "match": "([A-Za-z][A-Za-z0-9_]*)\\s*(=)",
+          "captures": {
+            "1": { "name": "entity.other.attribute-name.jsx" },
+            "2": { "name": "keyword.operator.assignment.jsx" }
+          }
+        },
+        {
+          "name": "meta.embedded.expression.jsx",
+          "begin": "{",
+          "end": "}",
+          "patterns": [
+            { "include": "$self" }
+          ]
+        }
+      ]
+    },
+    "strings": {
+      "patterns": [
+        {
+          "name": "string.quoted.double.crowe",
+          "begin": "\"",
+          "end": "\"",
+          "patterns": [{
+            "name": "constant.character.escape.crowe",
+            "match": "\\\\."
+          }]
+        },
+        {
+          "name": "string.quoted.single.crowe",
+          "begin": "'",
+          "end": "'",
+          "patterns": [{
+            "name": "constant.character.escape.crowe",
+            "match": "\\\\."
+          }]
+        },
+        {
+          "name": "string.template.crowe",
+          "begin": "`",
+          "end": "`",
+          "patterns": [
+            {
+              "name": "constant.character.escape.crowe",
+              "match": "\\\\."
+            },
+            {
+              "name": "meta.embedded.expression.crowe",
+              "begin": "\\${",
+              "end": "}",
+              "patterns": [{ "include": "$self" }]
+            }
+          ]
+        }
+      ]
+    },
+    "numbers": {
+      "patterns": [{
+        "name": "constant.numeric.crowe",
+        "match": "\\b[0-9]+(?:\\.[0-9]+)?\\b"
+      }]
+    },
+    "operators": {
+      "patterns": [{
+        "name": "keyword.operator.crowe",
+        "match": "(\\+|\\-|\\*|\\/|\\%|\\=|\\!|\\<|\\>|\\&|\\||\\?|\\:|\\~)"
+      }]
+    },
+    "comments": {
+      "patterns": [
+        {
+          "name": "comment.line.double-slash.crowe",
+          "match": "//.*$"
+        },
+        {
+          "name": "comment.block.crowe",
+          "begin": "/\\*",
+          "end": "\\*/"
+        }
+      ]
+    }
+  },
+  "scopeName": "source.crowe"
+}
