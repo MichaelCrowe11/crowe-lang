@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crowe Lang - React-Native Computing Language</title>
+    <style>
+        :root {
+            --primary: #007acc;
+            --secondary: #2d3748;
+            --accent: #48bb78;
+            --bg: #f7fafc;
+            --text: #2d3748;
+            --border: #e2e8f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            color: var(--text);
+            background: var(--bg);
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 0;
+        }
+        
+        nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 2rem;
+        }
+        
+        .nav-links a {
+            text-decoration: none;
+            color: var(--text);
+            font-weight: 500;
+        }
+        
+        .nav-links a:hover {
+            color: var(--primary);
+        }
+        
+        .hero {
+            padding: 4rem 0;
+            text-align: center;
+            background: linear-gradient(135deg, var(--primary), var(--accent));
+            color: white;
+        }
+        
+        .hero h1 {
+            font-size: 3.5rem;
+            margin-bottom: 1rem;
+        }
+        
+        .hero p {
+            font-size: 1.25rem;
+            margin-bottom: 2rem;
+            opacity: 0.9;
+        }
+        
+        .cta-buttons {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            text-decoration: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: white;
+            color: var(--primary);
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: white;
+            border: 2px solid white;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+        
+        .features {
+            padding: 4rem 0;
+        }
+        
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-top: 2rem;
+        }
+        
+        .feature {
+            background: white;
+            padding: 2rem;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            border: 1px solid var(--border);
+        }
+        
+        .feature h3 {
+            color: var(--primary);
+            margin-bottom: 1rem;
+        }
+        
+        .code-example {
+            background: var(--secondary);
+            color: white;
+            padding: 3rem 0;
+        }
+        
+        .code-block {
+            background: #1a202c;
+            border-radius: 0.5rem;
+            padding: 1.5rem;
+            overflow-x: auto;
+            margin: 1rem 0;
+        }
+        
+        .code-block pre {
+            margin: 0;
+            color: #e2e8f0;
+        }
+        
+        .keyword { color: #63b3ed; }
+        .string { color: #68d391; }
+        .comment { color: #a0aec0; }
+        .function { color: #fbb6ce; }
+        
+        .section {
+            padding: 3rem 0;
+        }
+        
+        .section h2 {
+            text-align: center;
+            margin-bottom: 2rem;
+            font-size: 2.5rem;
+            color: var(--secondary);
+        }
+        
+        footer {
+            background: var(--secondary);
+            color: white;
+            text-align: center;
+            padding: 2rem 0;
+        }
+        
+        @media (max-width: 768px) {
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+            
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <nav class="container">
+            <div class="logo">Crowe</div>
+            <ul class="nav-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#examples">Examples</a></li>
+                <li><a href="#getting-started">Get Started</a></li>
+                <li><a href="https://github.com/MichaelCrowe11/crowe-lang">GitHub</a></li>
+            </ul>
+        </nav>
+    </header>
+
+    <main>
+        <section class="hero">
+            <div class="container">
+                <h1>Crowe Lang</h1>
+                <p>A React-native computing language with AI operations, state management, and real-time streams</p>
+                <div class="cta-buttons">
+                    <a href="#getting-started" class="btn btn-primary">Get Started</a>
+                    <a href="https://github.com/MichaelCrowe11/crowe-lang" class="btn btn-secondary">View on GitHub</a>
+                </div>
+            </div>
+        </section>
+
+        <section id="features" class="features section">
+            <div class="container">
+                <h2>Why Crowe?</h2>
+                <div class="features-grid">
+                    <div class="feature">
+                        <h3>🎯 Component-First</h3>
+                        <p>React-native syntax with TypeScript types. Write components with state, computed values, effects, and actions that compile to clean React hooks.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>🤖 AI-Native</h3>
+                        <p>Built-in AI model integration. Load and use LLMs directly in your components with first-class language support.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>🔄 Real-Time Streams</h3>
+                        <p>WebSocket and EventSource connections as language primitives. Handle real-time data with reactive updates.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>🗄️ Store Management</h3>
+                        <p>Cross-component state with Zustand stores. Declarative state management that scales from components to apps.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>⚡ TypeScript Output</h3>
+                        <p>Compiles to clean, idiomatic React TSX with full type safety. No runtime overhead, just beautiful code.</p>
+                    </div>
+                    <div class="feature">
+                        <h3>🛠️ Great DX</h3>
+                        <p>VS Code extension, language server, source maps, and watch mode. Professional developer experience out of the box.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section class="code-example">
+            <div class="container">
+                <h2 style="color: white;">See It In Action</h2>
+                <div class="code-block">
+                    <pre><code><span class="comment">// Real-time chat with AI sentiment analysis</span>
+<span class="keyword">store</span> <span class="function">ChatStore</span> {
+  <span class="keyword">state</span> messages: Message[] = [];
+  <span class="keyword">stream</span> liveChat: Message = <span class="string">"wss://chat.example.com"</span>;
+  <span class="keyword">ai</span> sentiment: Classifier = <span class="function">model</span>(<span class="string">"sentiment-analysis"</span>);
+  
+  <span class="keyword">action</span> <span class="function">sendMessage</span>(text: string) {
+    messages = [...messages, { text, user: currentUser }];
+    <span class="function">analyzeSentiment</span>(text);
+  }
+  
+  <span class="keyword">action</span> <span class="keyword">async</span> <span class="function">analyzeSentiment</span>(text: string) {
+    <span class="keyword">const</span> result = <span class="keyword">await</span> sentiment.<span class="function">classify</span>(text);
+    <span class="comment">// Update message with sentiment</span>
+  }
+}
+
+<span class="keyword">component</span> <span class="function">ChatApp</span>() {
+  <span class="keyword">state</span> inputText: string = <span class="string">""</span>;
+  <span class="keyword">computed</span> store: any { <span class="keyword">return</span> <span class="function">useChatStore</span>(); }
+  
+  <span class="keyword">effect</span> <span class="function">onMount</span> {
+    store.<span class="function">connectLiveChat</span>();
+  }
+  
+  <span class="keyword">render</span> {
+    &lt;<span class="function">div</span> className=<span class="string">"chat-app"</span>&gt;
+      {store.messages.<span class="function">map</span>(msg =&gt; (
+        &lt;<span class="function">MessageBubble</span> key={msg.id} message={msg} /&gt;
+      ))}
+      &lt;<span class="function">input</span> 
+        value={inputText} 
+        onChange={(e) =&gt; inputText = e.target.value}
+        onKeyPress={(e) =&gt; e.key === <span class="string">'Enter'</span> && store.<span class="function">sendMessage</span>(inputText)}
+      /&gt;
+    &lt;/<span class="function">div</span>&gt;
+  }
+}</code></pre>
+                </div>
+                <p style="text-align: center; margin-top: 1rem; opacity: 0.8;">
+                    ↓ Compiles to clean React TSX with hooks, Zustand stores, and TypeScript types
+                </p>
+            </div>
+        </section>
+
+        <section id="getting-started" class="section">
+            <div class="container">
+                <h2>Getting Started</h2>
+                <div style="max-width: 800px; margin: 0 auto;">
+                    <div class="code-block">
+                        <pre><code><span class="comment"># Install globally</span>
+npm install -g crowe-lang
+
+<span class="comment"># Create a new project</span>
+crowe init my-app
+cd my-app
+
+<span class="comment"># Start development</span>
+npm run dev
+
+<span class="comment"># Or compile a single file</span>
+crowe compile app.crowe -o app.tsx --watch</code></pre>
+                    </div>
+                    
+                    <h3 style="margin: 2rem 0 1rem;">VS Code Extension</h3>
+                    <p>Search for "Crowe Language Support" in VS Code extensions for syntax highlighting, IntelliSense, and integrated compilation.</p>
+                    
+                    <h3 style="margin: 2rem 0 1rem;">Language Features</h3>
+                    <ul style="list-style: none; padding: 0;">
+                        <li>✅ <strong>Components</strong> - React function components with hooks</li>
+                        <li>✅ <strong>State</strong> - Reactive state with useState</li> 
+                        <li>✅ <strong>Computed</strong> - Memoized values with useMemo</li>
+                        <li>✅ <strong>Effects</strong> - Side effects with useEffect</li>
+                        <li>✅ <strong>Actions</strong> - Event handlers and async functions</li>
+                        <li>✅ <strong>Stores</strong> - Cross-component state with Zustand</li>
+                        <li>✅ <strong>Streams</strong> - Real-time data with WebSockets</li>
+                        <li>✅ <strong>AI Operations</strong> - ML model integration</li>
+                    </ul>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 Crowe Lang. MIT License. Built with ❤️ for the React community.</p>
+            <p style="margin-top: 0.5rem;">
+                <a href="https://github.com/MichaelCrowe11/crowe-lang" style="color: white; text-decoration: none;">GitHub</a> • 
+                <a href="https://github.com/MichaelCrowe11/crowe-lang/issues" style="color: white; text-decoration: none;">Issues</a> • 
+                <a href="https://npmjs.com/package/crowe-lang" style="color: white; text-decoration: none;">NPM</a>
+            </p>
+        </div>
+    </footer>
+
+    <script>
+        // Smooth scrolling for anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+            });
+        });
+
+        // Add animation on scroll
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature').forEach(feature => {
+            feature.style.opacity = '0';
+            feature.style.transform = 'translateY(20px)';
+            feature.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+            observer.observe(feature);
+        });
+    </script>
+</body>
+</html>

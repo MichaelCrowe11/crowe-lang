@@ -1,6 +1,14 @@
 import { CroweFile, Component, Store, Section, StateDecl, ComputedDecl, EffectDecl, ActionDecl, RenderBlock, StreamDecl, AIDecl } from './ast';
+import { generateSourceMapForComponent, addSourceMapComment } from './source-map';
 
-export function generateReactTSX(ast: CroweFile): string {
+export interface CodeGenOptions {
+  sourceMaps?: boolean;
+  sourceMapPath?: string;
+  originalSource?: string;
+  sourcePath?: string;
+}
+
+export function generateReactTSX(ast: CroweFile, options: CodeGenOptions = {}): string {
   const lines: string[] = [];
   lines.push(`import * as React from 'react';`);
   
@@ -32,7 +40,22 @@ export function generateReactTSX(ast: CroweFile): string {
     emitComponent(comp, lines);
     lines.push('');
   }
-  return lines.join('\n');
+  let result = lines.join('\n');
+  
+  // Generate source maps if requested
+  if (options.sourceMaps && options.originalSource && options.sourcePath) {
+    const sourceMap = generateSourceMapForComponent(
+      options.originalSource,
+      result,
+      options.sourcePath
+    );
+    
+    if (options.sourceMapPath) {
+      result = addSourceMapComment(result, options.sourceMapPath);
+    }
+  }
+  
+  return result;
 }
 
 function emitComponent(comp: Component, out: string[]) {

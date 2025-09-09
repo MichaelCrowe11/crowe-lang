@@ -21,6 +21,7 @@ program
   .option('-o, --output <file>', 'Output file')
   .option('-w, --watch', 'Watch for changes and recompile')
   .option('--check', 'Check syntax only, don\'t generate output')
+  .option('--source-maps', 'Generate source maps for debugging')
   .action(async (input, options) => {
     const compile = (inputFile: string) => {
       try {
@@ -40,7 +41,14 @@ program
           }
         }
         
-        const out = compileCroweToReactTSX(src);
+        const compileOptions = {
+          filename: inputFile,
+          sourceMaps: options.sourceMaps,
+          sourceMapPath: options.sourceMaps && options.output ? 
+            `${options.output}.map` : undefined
+        };
+        
+        const out = compileCroweToReactTSX(src, compileOptions);
         const base = path.basename(inputFile).replace(/\.crowe$/i, '') || 'Component';
         const finalOutput = out.replace(/export function\s+([A-Za-z_][A-Za-z0-9_]*)/, `export function ${base}`);
         

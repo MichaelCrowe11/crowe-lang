@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crowe Playground - Try Crowe Lang Online</title>
+    <style>
+        :root {
+            --primary: #007acc;
+            --secondary: #2d3748;
+            --accent: #48bb78;
+            --bg: #f7fafc;
+            --text: #2d3748;
+            --border: #e2e8f0;
+            --editor-bg: #1e1e1e;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        .header {
+            background: white;
+            border-bottom: 1px solid var(--border);
+            padding: 1rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--primary);
+            background: var(--primary);
+            color: white;
+            border-radius: 0.25rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: #0066cc;
+        }
+        
+        .btn-secondary {
+            background: transparent;
+            color: var(--primary);
+        }
+        
+        .btn-secondary:hover {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .playground {
+            height: calc(100vh - 4rem);
+            display: flex;
+        }
+        
+        .panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            border-right: 1px solid var(--border);
+        }
+        
+        .panel:last-child {
+            border-right: none;
+        }
+        
+        .panel-header {
+            background: white;
+            padding: 0.75rem 1rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--secondary);
+        }
+        
+        .editor {
+            flex: 1;
+            background: var(--editor-bg);
+            color: #d4d4d4;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            padding: 1rem;
+            border: none;
+            outline: none;
+            resize: none;
+            overflow-y: auto;
+        }
+        
+        .output {
+            flex: 1;
+            background: var(--editor-bg);
+            color: #d4d4d4;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 14px;
+            padding: 1rem;
+            overflow-y: auto;
+            white-space: pre;
+        }
+        
+        .examples {
+            position: absolute;
+            top: 4rem;
+            right: 1rem;
+            background: white;
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            z-index: 1000;
+            display: none;
+            max-width: 300px;
+        }
+        
+        .examples.show {
+            display: block;
+        }
+        
+        .example-item {
+            padding: 0.75rem 1rem;
+            cursor: pointer;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .example-item:last-child {
+            border-bottom: none;
+        }
+        
+        .example-item:hover {
+            background: var(--bg);
+        }
+        
+        .example-title {
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 0.25rem;
+        }
+        
+        .example-desc {
+            font-size: 0.8rem;
+            color: #666;
+        }
+        
+        .error {
+            color: #e53e3e;
+            background: #fed7d7;
+            padding: 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.25rem;
+            border: 1px solid #feb2b2;
+        }
+        
+        .success {
+            color: #38a169;
+            background: #c6f6d5;
+            padding: 0.5rem 1rem;
+            margin: 0.5rem 0;
+            border-radius: 0.25rem;
+            border: 1px solid #9ae6b4;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="logo">Crowe Playground</div>
+        <div class="controls">
+            <button id="compileBtn" class="btn">Compile</button>
+            <button id="examplesBtn" class="btn btn-secondary">Examples</button>
+            <a href="index.html" class="btn btn-secondary">← Back to Docs</a>
+        </div>
+    </div>
+
+    <div class="playground">
+        <div class="panel">
+            <div class="panel-header">Crowe Source</div>
+            <textarea id="editor" class="editor" placeholder="// Write your Crowe code here
+component HelloWorld() {
+  state count: number = 0;
+  
+  action increment() {
+    count = count + 1;
+  }
+  
+  render {
+    <div>
+      <h1>Count: {count}</h1>
+      <button onClick={() => increment()}>+1</button>
+    </div>
+  }
+}"></textarea>
+        </div>
+        
+        <div class="panel">
+            <div class="panel-header">Generated React TSX</div>
+            <div id="output" class="output">// Compiled React TSX will appear here
+// Click "Compile" to see the generated code</div>
+        </div>
+    </div>
+
+    <div id="examples" class="examples">
+        <div class="example-item" data-example="hello">
+            <div class="example-title">Hello World</div>
+            <div class="example-desc">Basic component with state and actions</div>
+        </div>
+        <div class="example-item" data-example="counter">
+            <div class="example-title">Counter with Computed</div>
+            <div class="example-desc">State, computed values, and effects</div>
+        </div>
+        <div class="example-item" data-example="store">
+            <div class="example-title">Store Example</div>
+            <div class="example-desc">Cross-component state management</div>
+        </div>
+        <div class="example-item" data-example="ai">
+            <div class="example-title">AI Integration</div>
+            <div class="example-desc">AI model loading and inference</div>
+        </div>
+        <div class="example-item" data-example="stream">
+            <div class="example-title">Real-time Streams</div>
+            <div class="example-desc">WebSocket data streaming</div>
+        </div>
+    </div>
+
+    <script>
+        // Example code snippets
+        const examples = {
+            hello: `component HelloWorld(props: { name?: string }) {
+  state greeting: string = "Hello";
+  
+  computed fullGreeting: string {
+    return \`\${greeting}, \${props.name || "World"}!\`;
+  }
+  
+  action changeGreeting() {
+    greeting = greeting === "Hello" ? "Hi" : "Hello";
+  }
+  
+  render {
+    <div className="greeting">
+      <h1>{fullGreeting}</h1>
+      <button onClick={() => changeGreeting()}>
+        Change Greeting
+      </button>
+    </div>
+  }
+}`,
+            
+            counter: `component Counter() {
+  state count: number = 0;
+  state step: number = 1;
+  
+  computed doubled: number (deps: [count]) {
+    return count * 2;
+  }
+  
+  effect onMount {
+    console.log('Counter mounted');
+  }
+  
+  effect onCountChange(deps: [count]) {
+    if (count > 10) {
+      console.log('Count is getting high!');
+    }
+  }
+  
+  action increment() {
+    count = count + step;
+  }
+  
+  action decrement() {
+    count = count - step;
+  }
+  
+  action reset() {
+    count = 0;
+  }
+  
+  render {
+    <div className="counter">
+      <h2>Count: {count}</h2>
+      <p>Doubled: {doubled}</p>
+      <div className="controls">
+        <button onClick={() => decrement()}>-{step}</button>
+        <button onClick={() => reset()}>Reset</button>
+        <button onClick={() => increment()}>+{step}</button>
+      </div>
+      <input 
+        type="number" 
+        value={step} 
+        onChange={(e) => step = parseInt(e.target.value) || 1}
+        placeholder="Step"
+      />
+    </div>
+  }
+}`,
+            
+            store: `store CounterStore {
+  state count: number = 0;
+  state history: number[] = [];
+  
+  computed average: number {
+    return history.length > 0 
+      ? history.reduce((a, b) => a + b, 0) / history.length 
+      : 0;
+  }
+  
+  action increment() {
+    count = count + 1;
+    history = [...history, count];
+  }
+  
+  action decrement() {
+    count = count - 1;
+    history = [...history, count];
+  }
+  
+  action reset() {
+    count = 0;
+    history = [];
+  }
+}
+
+component CounterApp() {
+  computed store: any { return useCounterStore(); }
+  
+  render {
+    <div className="counter-app">
+      <h1>Global Counter: {store.count}</h1>
+      <p>Average: {store.average.toFixed(2)}</p>
+      <div className="buttons">
+        <button onClick={() => store.decrement()}>-1</button>
+        <button onClick={() => store.reset()}>Reset</button>
+        <button onClick={() => store.increment()}>+1</button>
+      </div>
+      <p>History: {store.history.join(', ')}</p>
+    </div>
+  }
+}`,
+            
+            ai: `component AIDemo() {
+  state prompt: string = "";
+  state response: string = "";
+  state loading: boolean = false;
+  
+  ai textGenerator: TextGenerator = model("gpt-3.5-turbo");
+  
+  action async generateResponse() {
+    if (!prompt.trim()) return;
+    
+    loading = true;
+    response = "";
+    
+    try {
+      if (textGenerator) {
+        response = await textGenerator.generate(prompt);
+      } else {
+        response = "AI model is still loading...";
+      }
+    } catch (error) {
+      response = "Error: " + error.message;
+    } finally {
+      loading = false;
+    }
+  }
+  
+  render {
+    <div className="ai-demo">
+      <h2>AI Text Generation</h2>
+      <textarea
+        value={prompt}
+        onChange={(e) => prompt = e.target.value}
+        placeholder="Enter your prompt here..."
+        rows={3}
+      />
+      <button 
+        onClick={() => generateResponse()}
+        disabled={loading || !prompt.trim()}
+      >
+        {loading ? "Generating..." : "Generate"}
+      </button>
+      {response && (
+        <div className="response">
+          <h3>Response:</h3>
+          <p>{response}</p>
+        </div>
+      )}
+    </div>
+  }
+}`,
+            
+            stream: `component LiveChat() {
+  state messages: Message[] = [];
+  state newMessage: string = "";
+  
+  stream messageStream: Message = "wss://chat.example.com/messages";
+  
+  effect onMount {
+    connectMessageStream();
+  }
+  
+  effect onNewMessage(deps: [messageStream]) {
+    if (messageStream) {
+      messages = [...messages, messageStream];
+    }
+  }
+  
+  action sendMessage() {
+    if (!newMessage.trim()) return;
+    
+    const message = {
+      id: Date.now(),
+      text: newMessage,
+      user: "You",
+      timestamp: new Date()
+    };
+    
+    messages = [...messages, message];
+    newMessage = "";
+    
+    // Send to server (would be handled by stream connection)
+    // websocket.send(JSON.stringify(message));
+  }
+  
+  render {
+    <div className="live-chat">
+      <div className="messages">
+        {messages.map(msg => (
+          <div key={msg.id} className="message">
+            <strong>{msg.user}:</strong> {msg.text}
+            <small>{msg.timestamp.toLocaleTimeString()}</small>
+          </div>
+        ))}
+      </div>
+      <div className="input-area">
+        <input
+          value={newMessage}
+          onChange={(e) => newMessage = e.target.value}
+          onKeyPress={(e) => e.key === "Enter" && sendMessage()}
+          placeholder="Type a message..."
+        />
+        <button onClick={() => sendMessage()}>Send</button>
+      </div>
+    </div>
+  }
+}`
+        };
+
+        // Simple Crowe compiler (basic version for demo)
+        function compileCrowe(source) {
+            try {
+                // This is a very simplified version for demo purposes
+                // In reality, you'd use the full compiler
+                let output = source;
+                
+                // Basic transformations for demo
+                output = "import * as React from 'react';\n\n" + output;
+                
+                // Convert component declaration
+                output = output.replace(
+                    /component\s+(\w+)\s*\(([^)]*)\)\s*{/g,
+                    'export function $1($2) {'
+                );
+                
+                // Convert state declarations
+                output = output.replace(
+                    /state\s+(\w+):\s*([^=]+)\s*=\s*([^;]+);/g,
+                    'const [$1, set$1] = React.useState<$2>($3);'
+                );
+                
+                function capitalize(str) {
+                    return str.charAt(0).toUpperCase() + str.slice(1);
+                }
+                
+                // Convert actions
+                output = output.replace(
+                    /action\s+(async\s+)?(\w+)\s*\(([^)]*)\)\s*{([^}]*)}/g,
+                    (match, async, name, params, body) => {
+                        // Transform state assignments
+                        body = body.replace(/(\w+)\s*=\s*([^;]+);/g, (m, varName, value) => {
+                            // Check if this looks like a state variable (simple heuristic)
+                            if (source.includes(`state ${varName}`)) {
+                                return `set${capitalize(varName)}(${value});`;
+                            }
+                            return m;
+                        });
+                        
+                        return `${async || ''}function ${name}(${params}) {${body}}`;
+                    }
+                );
+                
+                // Convert computed values (simplified)
+                output = output.replace(
+                    /computed\s+(\w+):\s*([^{]+)\s*(deps:\s*\[[^\]]*\])?\s*{([^}]*)}/g,
+                    (match, name, type, deps, body) => {
+                        if (deps) {
+                            const depsList = deps.replace(/deps:\s*\[([^\]]*)\]/, '$1');
+                            return `const ${name} = React.useMemo(() => {${body}}, [${depsList}]);`;
+                        } else {
+                            return `const ${name} = (() => {${body}})();`;
+                        }
+                    }
+                );
+                
+                // Convert effects
+                output = output.replace(
+                    /effect\s+(onMount|(\w+))\s*(\(deps:\s*\[[^\]]*\]\))?\s*{([^}]*)}/g,
+                    (match, name, customName, deps, body) => {
+                        if (name === 'onMount') {
+                            return `React.useEffect(() => {${body}}, []);`;
+                        } else {
+                            const depsList = deps ? deps.replace(/\(deps:\s*\[([^\]]*)\]\)/, '$1') : '';
+                            return `React.useEffect(() => {${body}}, [${depsList}]);`;
+                        }
+                    }
+                );
+                
+                // Convert render block
+                output = output.replace(
+                    /render\s*{([^}]+)}/,
+                    'return ($1);'
+                );
+                
+                // Convert stores (basic)
+                output = output.replace(
+                    /store\s+(\w+)\s*{([^}]+)}/g,
+                    (match, storeName, body) => {
+                        return `export const use${storeName} = create((set, get) => ({${body}}));`;
+                    }
+                );
+                
+                return output;
+            } catch (error) {
+                throw new Error(`Compilation failed: ${error.message}`);
+            }
+        }
+
+        // UI Event Handlers
+        const editor = document.getElementById('editor');
+        const output = document.getElementById('output');
+        const compileBtn = document.getElementById('compileBtn');
+        const examplesBtn = document.getElementById('examplesBtn');
+        const examples = document.getElementById('examples');
+
+        compileBtn.addEventListener('click', () => {
+            const source = editor.value;
+            
+            if (!source.trim()) {
+                output.innerHTML = '<div class="error">Please enter some Crowe code to compile.</div>';
+                return;
+            }
+            
+            try {
+                const compiled = compileCrowe(source);
+                output.innerHTML = `<div class="success">✅ Compilation successful!</div>\n\n${compiled}`;
+            } catch (error) {
+                output.innerHTML = `<div class="error">❌ ${error.message}</div>`;
+            }
+        });
+
+        examplesBtn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            examples.classList.toggle('show');
+        });
+
+        document.addEventListener('click', () => {
+            examples.classList.remove('show');
+        });
+
+        examples.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const item = e.target.closest('.example-item');
+            if (item) {
+                const exampleName = item.dataset.example;
+                if (examples[exampleName]) {
+                    editor.value = examples[exampleName];
+                    examples.classList.remove('show');
+                    compileBtn.click(); // Auto-compile
+                }
+            }
+        });
+
+        // Load default example
+        window.addEventListener('load', () => {
+            editor.value = examples.hello;
+            compileBtn.click();
+        });
+
+        // Auto-compile on Ctrl+Enter
+        editor.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === 'Enter') {
+                e.preventDefault();
+                compileBtn.click();
+            }
+        });
+    </script>
+</body>
+</html>

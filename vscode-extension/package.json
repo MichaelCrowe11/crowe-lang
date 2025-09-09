@@ -1,24 +1,97 @@
 {
   "name": "crowe-lang",
   "displayName": "Crowe Language Support",
-  "description": "Syntax highlighting and IntelliSense for Crowe language",
-  "version": "0.1.0",
+  "description": "Syntax highlighting, IntelliSense, and language server for Crowe language",
+  "version": "0.2.0",
   "publisher": "crowe-lang",
   "engines": {
     "vscode": "^1.74.0"
   },
   "categories": ["Programming Languages"],
+  "activationEvents": [
+    "onLanguage:crowe"
+  ],
+  "main": "./out/extension.js",
   "contributes": {
     "languages": [{
       "id": "crowe",
       "aliases": ["Crowe", "crowe"],
       "extensions": [".crowe"],
-      "configuration": "./language-configuration.json"
+      "configuration": "./language-configuration.json",
+      "icon": {
+        "light": "./icons/crowe-light.svg",
+        "dark": "./icons/crowe-dark.svg"
+      }
     }],
     "grammars": [{
       "language": "crowe",
       "scopeName": "source.crowe",
       "path": "./syntaxes/crowe.tmLanguage.json"
-    }]
+    }],
+    "configuration": {
+      "type": "object",
+      "title": "Crowe Language",
+      "properties": {
+        "crowe.enableDiagnostics": {
+          "type": "boolean",
+          "default": true,
+          "description": "Enable diagnostic messages for Crowe files"
+        },
+        "crowe.enableAutoCompletion": {
+          "type": "boolean", 
+          "default": true,
+          "description": "Enable auto-completion for Crowe language constructs"
+        },
+        "crowe.compilerPath": {
+          "type": "string",
+          "default": "crowe",
+          "description": "Path to the Crowe compiler executable"
+        }
+      }
+    },
+    "commands": [
+      {
+        "command": "crowe.compileFile",
+        "title": "Compile Current File",
+        "category": "Crowe"
+      },
+      {
+        "command": "crowe.compileWatch",
+        "title": "Compile and Watch Current File", 
+        "category": "Crowe"
+      },
+      {
+        "command": "crowe.showOutput",
+        "title": "Show Compiled Output",
+        "category": "Crowe"
+      }
+    ],
+    "menus": {
+      "editor/context": [
+        {
+          "when": "resourceExtname == .crowe",
+          "command": "crowe.compileFile",
+          "group": "crowe"
+        },
+        {
+          "when": "resourceExtname == .crowe", 
+          "command": "crowe.compileWatch",
+          "group": "crowe"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./"
+  },
+  "devDependencies": {
+    "@types/vscode": "^1.74.0",
+    "@types/node": "^18.0.0",
+    "typescript": "^4.9.0"
+  },
+  "dependencies": {
+    "vscode-languageclient": "^9.0.1"
   }
 }
