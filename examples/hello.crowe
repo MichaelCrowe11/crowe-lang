@@ -1,0 +1,22 @@
+component HelloWorld(props: { initial?: number }) {
+  state count: number = props.initial ?? 0;
+
+  computed doubled: number { return count * 2; }
+  computed memoTripled: number (deps: [count]) { return count * 3; }
+
+  effect onMount { console.log('mounted'); }
+
+  action increment() { count = count + 1; }
+  action add(delta: number) { count = count + delta; }
+
+  render {
+    <div style={{ padding: 12 }}>
+      <h1>Hello crowe‑lang</h1>
+      <p>count: {count}</p>
+      <p>doubled (IIFE): {doubled}</p>
+      <p>tripled (memo): {memoTripled}</p>
+      <button onClick={() => increment()}>+1</button>
+      <button onClick={() => add(5)}>+5</button>
+    </div>
+  }
+}

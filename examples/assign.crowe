@@ -1,0 +1,11 @@
+component AssignTest() {
+  state x = 1;
+  state y = 2;
+
+  action bumpAll() {
+    x = x + 1;
+    y = x + y; // note: reads updated x from closure
+  }
+
+  render { <button onClick={() => bumpAll()}>bump</button> }
+}
