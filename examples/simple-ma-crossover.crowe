@@ -1,0 +1,61 @@
+// Simple Moving Average Crossover Strategy
+// A classic trend-following strategy
+
+strategy SimpleMA {
+  params {
+    fast_period: int = 10
+    slow_period: int = 30
+    position_size: float = 0.95  // Use 95% of capital
+  }
+  
+  indicators {
+    fast_ma = SMA(close, fast_period)
+    slow_ma = SMA(close, slow_period)
+    volume_ma = SMA(volume, 20)
+  }
+  
+  signals {
+    golden_cross = fast_ma > slow_ma and fast_ma[-1] <= slow_ma[-1]
+    death_cross = fast_ma < slow_ma and fast_ma[-1] >= slow_ma[-1]
+    volume_confirm = volume > volume_ma * 1.2
+  }
+  
+  rules {
+    // Enter long on golden cross with volume confirmation
+    when (golden_cross and volume_confirm and position == 0) {
+      buy(capital * position_size)
+    }
+    
+    // Exit on death cross
+    when (death_cross and position > 0) {
+      sell(position)
+    }
+  }
+  
+  risk {
+    max_position = 1.0 * capital
+    stop_loss = 0.05  // 5% stop loss
+    trailing_stop = 0.03  // 3% trailing stop
+  }
+}
+
+backtest SimpleMABacktest {
+  data_source = "mock"
+  start_date = "2023-01-01"
+  end_date = "2023-12-31"
+  initial_capital = 100000
+  
+  universe = ["SPY"]
+  frequency = DAY
+  
+  costs {
+    commission = 0.001
+    slippage = LinearSlippage(0.0005)
+  }
+  
+  output {
+    metrics = true
+    trades = true
+    equity_curve = true
+  }
+}

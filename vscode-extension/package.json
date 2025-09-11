@@ -1,54 +1,84 @@
 {
-  "name": "crowe-lang",
-  "displayName": "Crowe Language Support",
-  "description": "Syntax highlighting, IntelliSense, and language server for Crowe language",
-  "version": "0.2.0",
-  "publisher": "CroweOS-Systems",
-  "icon": "icons/icon.png",
+  "name": "crowelang",
+  "displayName": "CroweLang - Quantitative Trading DSL",
+  "description": "Language support for CroweLang quantitative trading strategies",
+  "version": "0.1.0",
+  "publisher": "croweai",
+  "icon": "icons/crowelang-icon.png",
   "galleryBanner": {
-    "color": "#0a4d4d",
+    "color": "#1a365d",
     "theme": "dark"
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/MichaelCrowe11/crowe-lang.git"
+    "url": "https://github.com/croweai/crowelang.git"
   },
   "bugs": {
-    "url": "https://github.com/MichaelCrowe11/crowe-lang/issues"
+    "url": "https://github.com/croweai/crowelang/issues"
   },
-  "homepage": "https://github.com/MichaelCrowe11/crowe-lang#readme",
+  "homepage": "https://crowelang.com",
   "license": "MIT",
   "keywords": [
-    "crowe",
-    "react",
-    "jsx",
-    "typescript",
-    "ai",
-    "streams",
-    "state-management",
-    "language-server",
-    "syntax-highlighting"
+    "trading",
+    "quantitative",
+    "finance",
+    "backtesting",
+    "algorithmic trading",
+    "market making",
+    "dsl",
+    "strategy",
+    "risk management"
   ],
   "engines": {
     "vscode": "^1.74.0"
   },
-  "categories": ["Programming Languages"],
+  "categories": [
+    "Programming Languages",
+    "Snippets",
+    "Linters"
+  ],
   "activationEvents": [
-    "onLanguage:crowe"
+    "onLanguage:crowelang"
   ],
   "main": "./out/extension.js",
   "contributes": {
-    "languages": [{
-      "id": "crowe",
-      "aliases": ["Crowe", "crowe"],
-      "extensions": [".crowe"],
-      "configuration": "./language-configuration.json"
-    }],
-    "grammars": [{
-      "language": "crowe",
-      "scopeName": "source.crowe",
-      "path": "./syntaxes/crowe.tmLanguage.json"
-    }],
+    "languages": [
+      {
+        "id": "crowelang",
+        "aliases": [
+          "CroweLang",
+          "crowelang"
+        ],
+        "extensions": [
+          ".crowe"
+        ],
+        "configuration": "./language-configuration.json",
+        "icon": {
+          "light": "./icons/crowelang-light.svg",
+          "dark": "./icons/crowelang-dark.svg"
+        }
+      }
+    ],
+    "grammars": [
+      {
+        "language": "crowelang",
+        "scopeName": "source.crowelang",
+        "path": "./syntaxes/crowelang.tmGrammar.json"
+      }
+    ],
+    "themes": [
+      {
+        "label": "CroweLang Dark",
+        "uiTheme": "vs-dark",
+        "path": "./themes/crowelang-dark.json"
+      }
+    ],
+    "snippets": [
+      {
+        "language": "crowelang",
+        "path": "./snippets/crowelang.json"
+      }
+    ],
     "configuration": {
       "type": "object",
       "title": "Crowe Language",

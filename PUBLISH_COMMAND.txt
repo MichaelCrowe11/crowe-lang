@@ -1,0 +1,21 @@
+# Publish crowe-lang to VS Code Marketplace
+
+## Your extension is ready: crowe-lang-0.2.0-final.vsix
+## Publisher: MichaelCrowe11
+
+## To publish, run this command with your PAT token:
+
+vsce publish --packagePath crowe-lang-0.2.0-final.vsix --pat YOUR_PERSONAL_ACCESS_TOKEN
+
+## Or if you're already logged in:
+
+vsce publish --packagePath crowe-lang-0.2.0-final.vsix
+
+## Alternative - Interactive login:
+
+vsce login MichaelCrowe11
+# (Enter your PAT when prompted)
+vsce publish --packagePath crowe-lang-0.2.0-final.vsix
+
+## The extension will be available at:
+https://marketplace.visualstudio.com/items?itemName=MichaelCrowe11.crowe-lang

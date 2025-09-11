@@ -1,0 +1,154 @@
+// CroweLang Example: Mean Reversion Strategy
+// A classic statistical arbitrage strategy
+
+import "polygon" as polygon;
+import { SMA, StdDev, RSI, VWAP } from "crowelang/indicators";
+
+strategy MeanReversion {
+  params {
+    lookback: int = 20;
+    zscore_entry: float = 2.0;
+    zscore_exit: float = 0.5;
+    position_size: float = 0.1;
+    min_volume: int = 100000;
+    rsi_threshold: float = 70.0;
+  }
+  
+  indicators {
+    sma = SMA(close, lookback);
+    std = StdDev(close, lookback);
+    zscore = (close - sma) / std;
+    rsi = RSI(close, 14);
+    vwap = VWAP(bars);
+  }
+  
+  signals {
+    long_setup = zscore < -zscore_entry and rsi < 30 and volume > min_volume;
+    long_exit = zscore > -zscore_exit or rsi > 70;
+    
+    short_setup = zscore > zscore_entry and rsi > rsi_threshold and volume > min_volume;
+    short_exit = zscore < zscore_exit or rsi < 30;
+    
+    market_stress = abs(zscore) > 3.0;
+    low_liquidity = volume < min_volume / 2;
+  }
+  
+  rules {
+    when (long_setup and not position and not market_stress) {
+      buy(position_size * capital, limit, close * 0.999);
+    }
+    
+    when (long_exit and position > 0) {
+      sell(position, market);
+    }
+    
+    when (short_setup and not position and not market_stress) {
+      short(position_size * capital, limit, close * 1.001);
+    }
+    
+    when (short_exit and position < 0) {
+      cover(abs(position), market);
+    }
+    
+    // Emergency exit on extreme moves
+    when (market_stress and position != 0) {
+      close(position, market);
+    }
+    
+    // Stop trading on low liquidity
+    when (low_liquidity) {
+      cancel_all_orders();
+    }
+  }
+  
+  risk {
+    max_position = 0.25 * capital;
+    max_drawdown = 0.05;
+    daily_var_limit = 0.03;
+    stop_loss = 0.02;
+    max_correlation = 0.7;
+    position_timeout = 3600; // seconds
+  }
+  
+  events {
+    on_bar(bar: Bar) {
+      if (bar.volume == 0) return;
+      
+      // Update indicators
+      update_indicators(bar);
+      
+      // Check risk limits
+      if (current_drawdown > max_drawdown) {
+        emergency_exit();
+      }
+    }
+    
+    on_fill(fill: Fill) {
+      log("Filled: ${fill.symbol} ${fill.quantity} @ ${fill.price}");
+      update_position(fill);
+      
+      // Set stop loss
+      if (position > 0) {
+        place_stop_order(position, close * (1 - stop_loss));
+      } else if (position < 0) {
+        place_stop_order(position, close * (1 + stop_loss));
+      }
+    }
+    
+    on_reject(order: Order, reason: string) {
+      log("Order rejected: ${reason}");
+      // Could implement retry logic here
+    }
+  }
+}
+
+// Helper data structures
+data TradingSession {
+  start_time: datetime;
+  end_time: datetime;
+  is_active: boolean = false;
+  
+  metrics {
+    session_pnl: float = calculate_session_pnl();
+    trade_count: int = count_trades();
+    win_rate: float = winning_trades / total_trades;
+  }
+}
+
+// Risk management functions
+indicator MaxDrawdown(equity_curve: float[]) -> float {
+  peak = max(equity_curve);
+  trough = min(equity_curve[equity_curve.index(peak):]);
+  return (peak - trough) / peak;
+}
+
+indicator Correlation(series1: float[], series2: float[], period: int = 20) -> float {
+  returns1 = [series1[i] / series1[i-1] - 1 for i in 1..len(series1)];
+  returns2 = [series2[i] / series2[i-1] - 1 for i in 1..len(series2)];
+  
+  return correlation(returns1[-period:], returns2[-period:]);
+}
+
+// Backtest configuration
+backtest Config {
+  data_source = "polygon";
+  start_date = "2022-01-01";
+  end_date = "2023-12-31";
+  initial_capital = 1000000;
+  
+  universe = ["AAPL", "GOOGL", "MSFT", "AMZN", "TSLA"];
+  frequency = MINUTE;
+  
+  costs {
+    commission = 0.001;  // 10 bps
+    slippage = LinearSlippage(0.0005);
+    borrow_rate = 0.02;  // 2% annual
+  }
+  
+  output {
+    metrics = true;
+    trades = true;
+    equity_curve = true;
+    risk_report = true;
+  }
+}

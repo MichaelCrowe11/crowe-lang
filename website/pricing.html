@@ -1,0 +1,402 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crowe Language - Pricing | AI-Native React Development</title>
+    <meta name="description" content="Choose the perfect Crowe Language plan. From free hobby projects to enterprise solutions. Start with a 14-day free trial.">
+    
+    <!-- Stripe -->
+    <script src="https://js.stripe.com/v3/"></script>
+    
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-XXXXXXXXXX"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'G-XXXXXXXXXX');
+    </script>
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="css/pricing.css">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="images/favicon.png">
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="container">
+            <div class="nav-brand">
+                <img src="images/logo.svg" alt="Crowe" class="logo">
+                <span class="brand-text">Crowe Language</span>
+            </div>
+            <div class="nav-links">
+                <a href="index.html">Home</a>
+                <a href="docs.html">Documentation</a>
+                <a href="pricing.html" class="active">Pricing</a>
+                <a href="https://github.com/MichaelCrowe11/crowe-lang" target="_blank">GitHub</a>
+                <a href="https://app.crowe-lang.dev/signup" class="btn btn-primary">Get Started</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+        <div class="container">
+            <h1 class="hero-title">Simple, Transparent Pricing</h1>
+            <p class="hero-subtitle">Start free, scale as you grow. No hidden fees.</p>
+            
+            <!-- Early Adopter Banner -->
+            <div class="promo-banner">
+                🎉 <strong>Early Adopter Special:</strong> Get 50% off any paid plan for 12 months! Use code <code>EARLY50</code>
+            </div>
+        </div>
+    </section>
+
+    <!-- Pricing Cards -->
+    <section class="pricing-section">
+        <div class="container">
+            <div class="pricing-grid">
+                
+                <!-- Hobby Tier -->
+                <div class="pricing-card" data-tier="hobby">
+                    <div class="card-header">
+                        <h3>Hobby</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">0</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <p class="description">Perfect for learning and personal projects</p>
+                    </div>
+                    <div class="card-features">
+                        <ul>
+                            <li>✓ 3 projects</li>
+                            <li>✓ 100 build minutes/month</li>
+                            <li>✓ Community support</li>
+                            <li>✓ Public deployments</li>
+                            <li>✓ Basic templates</li>
+                            <li class="disabled">✗ AI assistance</li>
+                            <li class="disabled">✗ Private projects</li>
+                        </ul>
+                    </div>
+                    <div class="card-action">
+                        <button class="btn btn-outline" onclick="signUp('hobby')">
+                            Start Free
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Pro Tier (Most Popular) -->
+                <div class="pricing-card featured" data-tier="pro">
+                    <div class="popular-badge">Most Popular</div>
+                    <div class="card-header">
+                        <h3>Pro</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">29</span>
+                            <span class="period">/month</span>
+                        </div>
+                        <p class="description">For professional developers and freelancers</p>
+                    </div>
+                    <div class="card-features">
+                        <ul>
+                            <li>✓ <strong>Unlimited projects</strong></li>
+                            <li>✓ <strong>1,000 build minutes/month</strong></li>
+                            <li>✓ <strong>AI assistance (10K tokens)</strong></li>
+                            <li>✓ Private projects</li>
+                            <li>✓ 3 deployment environments</li>
+                            <li>✓ Email support</li>
+                            <li>✓ Advanced templates</li>
+                            <li>✓ GitHub integration</li>
+                            <li>✓ Custom domains</li>
+                        </ul>
+                    </div>
+                    <div class="card-action">
+                        <button class="btn btn-primary" onclick="subscribe('pro')">
+                            Start 14-Day Free Trial
+                        </button>
+                        <p class="trial-text">No credit card required</p>
+                    </div>
+                </div>
+
+                <!-- Team Tier -->
+                <div class="pricing-card" data-tier="team">
+                    <div class="card-header">
+                        <h3>Team</h3>
+                        <div class="price">
+                            <span class="currency">$</span>
+                            <span class="amount">99</span>
+                            <span class="period">/user/month</span>
+                        </div>
+                        <p class="description">Collaborate with your entire team</p>
+                    </div>
+                    <div class="card-features">
+                        <ul>
+                            <li>✓ Everything in Pro</li>
+                            <li>✓ <strong>5,000 build minutes/month</strong></li>
+                            <li>✓ <strong>Unlimited AI assistance</strong></li>
+                            <li>✓ <strong>Team collaboration</strong></li>
+                            <li>✓ Unlimited environments</li>
+                            <li>✓ Priority support</li>
+                            <li>✓ CI/CD pipelines</li>
+                            <li>✓ Preview deployments</li>
+                            <li>✓ Team analytics</li>
+                            <li>✓ SSO integration</li>
+                        </ul>
+                    </div>
+                    <div class="card-action">
+                        <button class="btn btn-primary" onclick="subscribe('team')">
+                            Start 14-Day Free Trial
+                        </button>
+                        <p class="trial-text">Minimum 3 users</p>
+                    </div>
+                </div>
+
+                <!-- Enterprise Tier -->
+                <div class="pricing-card enterprise" data-tier="enterprise">
+                    <div class="card-header">
+                        <h3>Enterprise</h3>
+                        <div class="price">
+                            <span class="amount">Custom</span>
+                        </div>
+                        <p class="description">For large organizations with custom needs</p>
+                    </div>
+                    <div class="card-features">
+                        <ul>
+                            <li>✓ Everything in Team</li>
+                            <li>✓ <strong>Unlimited everything</strong></li>
+                            <li>✓ <strong>On-premise deployment</strong></li>
+                            <li>✓ <strong>Dedicated support engineer</strong></li>
+                            <li>✓ 99.9% SLA guarantee</li>
+                            <li>✓ Custom integrations</li>
+                            <li>✓ Audit logs & compliance</li>
+                            <li>✓ Custom training</li>
+                            <li>✓ Volume discounts</li>
+                            <li>✓ Invoice billing</li>
+                        </ul>
+                    </div>
+                    <div class="card-action">
+                        <button class="btn btn-outline" onclick="contactSales()">
+                            Contact Sales
+                        </button>
+                        <p class="trial-text">Let's discuss your needs</p>
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </section>
+
+    <!-- Comparison Table -->
+    <section class="comparison-section">
+        <div class="container">
+            <h2>Detailed Feature Comparison</h2>
+            <div class="comparison-table">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Feature</th>
+                            <th>Hobby</th>
+                            <th>Pro</th>
+                            <th>Team</th>
+                            <th>Enterprise</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Projects</td>
+                            <td>3</td>
+                            <td>Unlimited</td>
+                            <td>Unlimited</td>
+                            <td>Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Build Minutes</td>
+                            <td>100/month</td>
+                            <td>1,000/month</td>
+                            <td>5,000/month</td>
+                            <td>Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>AI Tokens</td>
+                            <td>-</td>
+                            <td>10K/month</td>
+                            <td>Unlimited</td>
+                            <td>Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Team Members</td>
+                            <td>1</td>
+                            <td>1</td>
+                            <td>Unlimited</td>
+                            <td>Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Support</td>
+                            <td>Community</td>
+                            <td>Email</td>
+                            <td>Priority</td>
+                            <td>Dedicated</td>
+                        </tr>
+                        <tr>
+                            <td>Deployment Environments</td>
+                            <td>1</td>
+                            <td>3</td>
+                            <td>Unlimited</td>
+                            <td>Unlimited</td>
+                        </tr>
+                        <tr>
+                            <td>Custom Domain</td>
+                            <td>✗</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>Private Projects</td>
+                            <td>✗</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>CI/CD Pipelines</td>
+                            <td>✗</td>
+                            <td>✗</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>SSO/SAML</td>
+                            <td>✗</td>
+                            <td>✗</td>
+                            <td>✓</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>On-Premise Option</td>
+                            <td>✗</td>
+                            <td>✗</td>
+                            <td>✗</td>
+                            <td>✓</td>
+                        </tr>
+                        <tr>
+                            <td>SLA Guarantee</td>
+                            <td>✗</td>
+                            <td>✗</td>
+                            <td>✗</td>
+                            <td>99.9%</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- FAQ Section -->
+    <section class="faq-section">
+        <div class="container">
+            <h2>Frequently Asked Questions</h2>
+            <div class="faq-grid">
+                <div class="faq-item">
+                    <h3>Can I change plans anytime?</h3>
+                    <p>Yes! You can upgrade or downgrade your plan at any time. Changes take effect immediately with prorated billing.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>What happens if I exceed my limits?</h3>
+                    <p>We'll notify you when you're approaching limits. You can upgrade your plan or purchase additional resources as needed.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Do you offer educational discounts?</h3>
+                    <p>Yes! Students and educators get 50% off Pro plans. Non-profits receive 30% off.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Is there a free trial?</h3>
+                    <p>All paid plans come with a 14-day free trial. No credit card required to start.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>Can I self-host Crowe?</h3>
+                    <p>The core language is open-source and free to self-host. Enterprise customers can get on-premise cloud platform.</p>
+                </div>
+                <div class="faq-item">
+                    <h3>What payment methods do you accept?</h3>
+                    <p>We accept all major credit cards, PayPal, and wire transfers for enterprise customers.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+            <h2>Ready to accelerate your React development?</h2>
+            <p>Join thousands of developers building with Crowe</p>
+            <div class="cta-buttons">
+                <button class="btn btn-primary btn-large" onclick="signUp('pro')">
+                    Start Free Trial
+                </button>
+                <a href="https://demo.crowe-lang.dev" class="btn btn-outline btn-large">
+                    View Live Demo
+                </a>
+            </div>
+            <p class="guarantee">
+                <img src="images/shield.svg" alt="Guarantee" class="icon">
+                30-day money-back guarantee • Cancel anytime • No questions asked
+            </p>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-grid">
+                <div>
+                    <h4>Product</h4>
+                    <ul>
+                        <li><a href="#">Features</a></li>
+                        <li><a href="#">Pricing</a></li>
+                        <li><a href="#">Documentation</a></li>
+                        <li><a href="#">Changelog</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Company</h4>
+                    <ul>
+                        <li><a href="#">About</a></li>
+                        <li><a href="#">Blog</a></li>
+                        <li><a href="#">Careers</a></li>
+                        <li><a href="#">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Resources</h4>
+                    <ul>
+                        <li><a href="#">GitHub</a></li>
+                        <li><a href="#">Discord</a></li>
+                        <li><a href="#">Twitter</a></li>
+                        <li><a href="#">YouTube</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4>Legal</h4>
+                    <ul>
+                        <li><a href="#">Privacy</a></li>
+                        <li><a href="#">Terms</a></li>
+                        <li><a href="#">Security</a></li>
+                        <li><a href="#">GDPR</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2025 Crowe Language. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Scripts -->
+    <script src="js/pricing.js"></script>
+</body>
+</html>

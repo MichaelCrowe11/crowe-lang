@@ -1,0 +1,600 @@
+// CroweLang Code Generator - Trading DSL to Python/TypeScript
+import * as AST from './ast-trading';
+
+export interface CodegenOptions {
+  target: 'python' | 'typescript' | 'cpp' | 'rust';
+  runtime: 'backtest' | 'live' | 'research';
+  optimize: boolean;
+  debug: boolean;
+}
+
+export class TradingCodeGenerator {
+  private options: CodegenOptions;
+  private imports: Set<string> = new Set();
+  private globals: Set<string> = new Set();
+
+  constructor(options: CodegenOptions) {
+    this.options = options;
+  }
+
+  generateProgram(program: AST.Program): string {
+    const parts: string[] = [];
+
+    // Generate imports
+    if (program.imports.length > 0) {
+      parts.push(this.generateImports(program.imports));
+      parts.push('');
+    }
+
+    // Generate data structures
+    for (const dataDecl of program.data) {
+      parts.push(this.generateDataDecl(dataDecl));
+      parts.push('');
+    }
+
+    // Generate indicators
+    for (const indicator of program.indicators) {
+      parts.push(this.generateIndicator(indicator));
+      parts.push('');
+    }
+
+    // Generate strategies
+    for (const strategy of program.strategies) {
+      parts.push(this.generateStrategy(strategy));
+      parts.push('');
+    }
+
+    // Generate backtests
+    for (const backtest of program.backtests) {
+      parts.push(this.generateBacktest(backtest));
+      parts.push('');
+    }
+
+    return this.wrapWithHeaders(parts.join('\n'));
+  }
+
+  private generateStrategy(strategy: AST.StrategyDecl): string {
+    const parts: string[] = [];
+    const className = strategy.name.name;
+
+    if (this.options.target === 'python') {
+      parts.push(`class ${className}Strategy(BaseStrategy):`);
+      parts.push('    def __init__(self, **params):');
+      parts.push('        super().__init__()');
+      
+      // Generate parameters
+      if (strategy.params) {
+        for (const param of strategy.params.params) {
+          const defaultVal = param.defaultValue ? this.generateExpression(param.defaultValue) : 'None';
+          parts.push(`        self.${param.name.name} = params.get('${param.name.name}', ${defaultVal})`);
+        }
+      }
+
+      parts.push('        self.indicators = {}');
+      parts.push('        self.signals = {}');
+      parts.push('        self.position = 0');
+      parts.push('        self.capital = self.initial_capital');
+      parts.push('');
+
+      // Generate indicator initialization
+      if (strategy.indicators) {
+        parts.push('    def initialize_indicators(self):');
+        for (const indicator of strategy.indicators.indicators) {
+          const expr = indicator.value.kind === 'IndicatorCall' 
+            ? this.generateIndicatorCall(indicator.value) 
+            : this.generateExpression(indicator.value);
+          parts.push(`        self.indicators['${indicator.name.name}'] = ${expr}`);
+        }
+        parts.push('');
+      }
+
+      // Generate signal calculation
+      if (strategy.signals) {
+        parts.push('    def update_signals(self, bar):');
+        parts.push('        # Update indicators first');
+        parts.push('        self.update_indicators(bar)');
+        parts.push('');
+        for (const signal of strategy.signals.signals) {
+          const condition = this.generateExpression(signal.condition);
+          parts.push(`        self.signals['${signal.name.name}'] = ${condition}`);
+        }
+        parts.push('');
+      }
+
+      // Generate trading rules
+      if (strategy.rules) {
+        parts.push('    def process_rules(self, bar):');
+        parts.push('        self.update_signals(bar)');
+        parts.push('');
+        for (const rule of strategy.rules.rules) {
+          const condition = this.generateExpression(rule.condition);
+          parts.push(`        if ${condition}:`);
+          for (const action of rule.actions) {
+            parts.push(`            ${this.generateTradingAction(action)}`);
+          }
+          parts.push('');
+        }
+      }
+
+      // Generate event handlers
+      if (strategy.events) {
+        for (const handler of strategy.events.handlers) {
+          parts.push(`    def ${handler.name.name}(self, ${this.generateParameters(handler.params)}):`);
+          parts.push(this.generateBlock(handler.body, '        '));
+          parts.push('');
+        }
+      }
+
+    } else if (this.options.target === 'typescript') {
+      parts.push(`export class ${className}Strategy extends BaseStrategy {`);
+      
+      // Generate parameter interface
+      parts.push('  interface Params {');
+      if (strategy.params) {
+        for (const param of strategy.params.params) {
+          const type = this.generateType(param.type);
+          const optional = param.defaultValue ? '?' : '';
+          parts.push(`    ${param.name.name}${optional}: ${type};`);
+        }
+      }
+      parts.push('  }');
+      parts.push('');
+
+      parts.push('  private params: Params;');
+      parts.push('  private indicators: Record<string, number> = {};');
+      parts.push('  private signals: Record<string, boolean> = {};');
+      parts.push('');
+
+      parts.push('  constructor(params: Params) {');
+      parts.push('    super();');
+      parts.push('    this.params = { ...defaultParams, ...params };');
+      parts.push('  }');
+      parts.push('');
+
+      // Generate methods similar to Python version
+      if (strategy.signals) {
+        parts.push('  updateSignals(bar: Bar): void {');
+        for (const signal of strategy.signals.signals) {
+          const condition = this.generateExpression(signal.condition);
+          parts.push(`    this.signals['${signal.name.name}'] = ${condition};`);
+        }
+        parts.push('  }');
+        parts.push('');
+      }
+
+      if (strategy.rules) {
+        parts.push('  processRules(bar: Bar): void {');
+        parts.push('    this.updateSignals(bar);');
+        parts.push('');
+        for (const rule of strategy.rules.rules) {
+          const condition = this.generateExpression(rule.condition);
+          parts.push(`    if (${condition}) {`);
+          for (const action of rule.actions) {
+            parts.push(`      ${this.generateTradingAction(action)};`);
+          }
+          parts.push('    }');
+        }
+        parts.push('  }');
+      }
+
+      parts.push('}');
+    }
+
+    return parts.join('\n');
+  }
+
+  private generateTradingAction(action: AST.TradingAction): string {
+    switch (action.kind) {
+      case 'BuyAction':
+        const buyQty = this.generateExpression(action.quantity);
+        const buyPrice = action.price ? `, price=${this.generateExpression(action.price)}` : '';
+        const buyType = action.orderType ? `, order_type='${action.orderType}'` : '';
+        return `self.buy(${buyQty}${buyPrice}${buyType})`;
+
+      case 'SellAction':
+        const sellQty = this.generateExpression(action.quantity);
+        const sellPrice = action.price ? `, price=${this.generateExpression(action.price)}` : '';
+        const sellType = action.orderType ? `, order_type='${action.orderType}'` : '';
+        return `self.sell(${sellQty}${sellPrice}${sellType})`;
+
+      case 'ShortAction':
+        const shortQty = this.generateExpression(action.quantity);
+        const shortPrice = action.price ? `, price=${this.generateExpression(action.price)}` : '';
+        const shortType = action.orderType ? `, order_type='${action.orderType}'` : '';
+        return `self.short(${shortQty}${shortPrice}${shortType})`;
+
+      case 'CoverAction':
+        const coverQty = this.generateExpression(action.quantity);
+        const coverPrice = action.price ? `, price=${this.generateExpression(action.price)}` : '';
+        const coverType = action.orderType ? `, order_type='${action.orderType}'` : '';
+        return `self.cover(${coverQty}${coverPrice}${coverType})`;
+
+      case 'CustomAction':
+        const args = action.args.map(arg => this.generateExpression(arg)).join(', ');
+        return `self.${action.function.name}(${args})`;
+
+      default:
+        return '# Unknown trading action';
+    }
+  }
+
+  private generateIndicator(indicator: AST.IndicatorDecl): string {
+    const parts: string[] = [];
+    const name = indicator.name.name;
+    const params = this.generateParameters(indicator.params);
+
+    if (this.options.target === 'python') {
+      parts.push(`def ${name}(${params}):`);
+      if (indicator.body.kind === 'Block') {
+        parts.push(this.generateBlock(indicator.body, '    '));
+      } else {
+        const expr = this.generateExpression(indicator.body as AST.Expr);
+        parts.push(`    return ${expr}`);
+      }
+    } else if (this.options.target === 'typescript') {
+      const returnType = indicator.returnType ? this.generateType(indicator.returnType) : 'number';
+      parts.push(`export function ${name}(${params}): ${returnType} {`);
+      if (indicator.body.kind === 'Block') {
+        parts.push(this.generateBlock(indicator.body, '  '));
+      } else {
+        const expr = this.generateExpression(indicator.body as AST.Expr);
+        parts.push(`  return ${expr};`);
+      }
+      parts.push('}');
+    }
+
+    return parts.join('\n');
+  }
+
+  private generateDataDecl(data: AST.DataDecl): string {
+    const parts: string[] = [];
+    const name = data.name.name;
+
+    if (this.options.target === 'python') {
+      parts.push(`@dataclass`);
+      parts.push(`class ${name}:`);
+      
+      for (const field of data.fields) {
+        const type = this.generatePythonType(field.type);
+        const optional = field.optional ? ' = None' : '';
+        parts.push(`    ${field.name.name}: ${type}${optional}`);
+      }
+
+      if (data.computed) {
+        parts.push('');
+        for (const computed of data.computed) {
+          parts.push(`    @property`);
+          parts.push(`    def ${computed.name.name}(self) -> ${this.generatePythonType(computed.type)}:`);
+          parts.push(`        return ${this.generateExpression(computed.computation)}`);
+        }
+      }
+
+    } else if (this.options.target === 'typescript') {
+      parts.push(`export interface ${name} {`);
+      for (const field of data.fields) {
+        const type = this.generateType(field.type);
+        const optional = field.optional ? '?' : '';
+        parts.push(`  ${field.name.name}${optional}: ${type};`);
+      }
+      parts.push('}');
+
+      if (data.computed) {
+        parts.push('');
+        parts.push(`export class ${name}WithComputed implements ${name} {`);
+        // Generate constructor and computed properties
+        parts.push('  // TODO: Generate computed properties');
+        parts.push('}');
+      }
+    }
+
+    return parts.join('\n');
+  }
+
+  private generateBacktest(backtest: AST.BacktestDecl): string {
+    const parts: string[] = [];
+    const name = backtest.name.name;
+
+    if (this.options.target === 'python') {
+      parts.push(`def run_${name.toLowerCase()}():`);
+      parts.push('    config = BacktestConfig(');
+      
+      // Generate config from AST
+      for (const [key, value] of Object.entries(backtest.config)) {
+        if (key !== 'kind' && key !== 'loc' && value !== undefined) {
+          if (typeof value === 'object' && 'kind' in value) {
+            parts.push(`        ${key}=${this.generateExpression(value as AST.Expr)},`);
+          }
+        }
+      }
+      
+      parts.push('    )');
+      parts.push('    engine = BacktestEngine(config)');
+      parts.push('    results = engine.run()');
+      parts.push('    return results');
+
+    } else if (this.options.target === 'typescript') {
+      parts.push(`export function run${name}(): BacktestResults {`);
+      parts.push('  const config: BacktestConfig = {');
+      parts.push('    // TODO: Generate config from AST');
+      parts.push('  };');
+      parts.push('  const engine = new BacktestEngine(config);');
+      parts.push('  return engine.run();');
+      parts.push('}');
+    }
+
+    return parts.join('\n');
+  }
+
+  private generateExpression(expr: AST.Expr): string {
+    switch (expr.kind) {
+      case 'Lit':
+        if (typeof expr.value === 'string') {
+          return `"${expr.value}"`;
+        }
+        return String(expr.value);
+
+      case 'IdExpr':
+        return this.mapIdentifier(expr.id.name);
+
+      case 'BinaryExpr':
+        const left = this.generateExpression(expr.left);
+        const right = this.generateExpression(expr.right);
+        return `(${left} ${this.mapOperator(expr.op)} ${right})`;
+
+      case 'UnaryExpr':
+        const arg = this.generateExpression(expr.arg);
+        return `${this.mapOperator(expr.op)}${arg}`;
+
+      case 'CallExpr':
+        const callee = this.generateExpression(expr.callee);
+        const args = expr.args.map(arg => this.generateExpression(arg)).join(', ');
+        return `${callee}(${args})`;
+
+      case 'MemberExpr':
+        const object = this.generateExpression(expr.object);
+        return `${object}.${expr.property.name}`;
+
+      case 'ArrayLit':
+        const elements = expr.elements.map(el => this.generateExpression(el)).join(', ');
+        return this.options.target === 'python' ? `[${elements}]` : `[${elements}]`;
+
+      case 'ObjectLit':
+        const props = expr.properties.map(prop => {
+          const key = 'kind' in prop.key && prop.key.kind === 'Lit' 
+            ? `"${(prop.key as any).value}"` 
+            : (prop.key as any).name;
+          const value = this.generateExpression(prop.value);
+          return this.options.target === 'python' ? `"${key}": ${value}` : `${key}: ${value}`;
+        }).join(', ');
+        return this.options.target === 'python' ? `{${props}}` : `{${props}}`;
+
+      case 'SliceExpr':
+        const obj = this.generateExpression(expr.object);
+        const start = expr.start ? this.generateExpression(expr.start) : '';
+        const end = expr.end ? this.generateExpression(expr.end) : '';
+        return `${obj}[${start}:${end}]`;
+
+      case 'ComprehensionExpr':
+        if (this.options.target === 'python') {
+          const element = this.generateExpression(expr.element);
+          const loops = expr.loops.map(loop => 
+            `for ${loop.variable.name} in ${this.generateExpression(loop.iterable)}`
+          ).join(' ');
+          const filter = expr.filter ? ` if ${this.generateExpression(expr.filter)}` : '';
+          return `[${element} ${loops}${filter}]`;
+        } else {
+          // Convert to TypeScript map/filter
+          return '/* TODO: Convert comprehension to TypeScript */';
+        }
+
+      default:
+        return `/* Unsupported expression: ${(expr as any).kind} */`;
+    }
+  }
+
+  private generateIndicatorCall(call: AST.IndicatorCall): string {
+    const args = call.args.map(arg => this.generateExpression(arg)).join(', ');
+    const indicatorName = call.indicator.name;
+    
+    if (this.options.target === 'python') {
+      return `${indicatorName}(${args})`;
+    } else {
+      return `indicators.${indicatorName}(${args})`;
+    }
+  }
+
+  private generateBlock(block: AST.Block, indent: string): string {
+    return block.body.map(stmt => indent + this.generateStatement(stmt)).join('\n');
+  }
+
+  private generateStatement(stmt: AST.Stmt): string {
+    switch (stmt.kind) {
+      case 'ExprStmt':
+        return this.generateExpression(stmt.expression);
+
+      case 'VarDecl':
+        const decls = stmt.declarations.map(decl => {
+          const init = decl.init ? ` = ${this.generateExpression(decl.init)}` : '';
+          return `${decl.id.name}${init}`;
+        }).join(', ');
+        return this.options.target === 'python' ? decls : `let ${decls};`;
+
+      case 'ReturnStmt':
+        const arg = stmt.argument ? ` ${this.generateExpression(stmt.argument)}` : '';
+        return `return${arg}`;
+
+      case 'IfStmt':
+        const test = this.generateExpression(stmt.test);
+        const consequent = this.generateStatement(stmt.consequent);
+        if (this.options.target === 'python') {
+          return `if ${test}:\n    ${consequent}`;
+        } else {
+          return `if (${test}) { ${consequent} }`;
+        }
+
+      default:
+        return `/* Unsupported statement: ${(stmt as any).kind} */`;
+    }
+  }
+
+  private generateParameters(params: AST.Param[]): string {
+    return params.map(param => {
+      const type = param.type ? (this.options.target === 'python' ? 
+        `: ${this.generatePythonType(param.type)}` : 
+        `: ${this.generateType(param.type)}`) : '';
+      const defaultVal = param.defaultValue ? 
+        ` = ${this.generateExpression(param.defaultValue)}` : '';
+      return `${param.name.name}${type}${defaultVal}`;
+    }).join(', ');
+  }
+
+  private generateType(type: AST.TypeNode): string {
+    switch (type.kind) {
+      case 'PrimitiveType':
+        return this.mapPrimitiveType(type.name);
+      case 'ArrayType':
+        return `${this.generateType(type.elementType)}[]`;
+      case 'RefType':
+        return type.name.name;
+      case 'OptionalType':
+        return `${this.generateType(type.type)} | undefined`;
+      default:
+        return 'any';
+    }
+  }
+
+  private generatePythonType(type: AST.TypeNode): string {
+    switch (type.kind) {
+      case 'PrimitiveType':
+        const typeMap: Record<string, string> = {
+          'int': 'int',
+          'float': 'float',
+          'string': 'str',
+          'boolean': 'bool',
+          'datetime': 'datetime',
+          'void': 'None'
+        };
+        return typeMap[type.name] || type.name;
+      case 'ArrayType':
+        return `List[${this.generatePythonType(type.elementType)}]`;
+      case 'RefType':
+        return type.name.name;
+      case 'OptionalType':
+        return `Optional[${this.generatePythonType(type.type)}]`;
+      default:
+        return 'Any';
+    }
+  }
+
+  private mapPrimitiveType(type: string): string {
+    const typeMap: Record<string, string> = {
+      'int': 'number',
+      'float': 'number',
+      'string': 'string',
+      'boolean': 'boolean',
+      'datetime': 'Date',
+      'void': 'void'
+    };
+    return typeMap[type] || type;
+  }
+
+  private mapIdentifier(id: string): string {
+    // Map CroweLang identifiers to target language
+    const mappings: Record<string, Record<string, string>> = {
+      python: {
+        'close': 'self.close',
+        'open': 'self.open',
+        'high': 'self.high',
+        'low': 'self.low',
+        'volume': 'self.volume',
+        'position': 'self.position',
+        'capital': 'self.capital'
+      },
+      typescript: {
+        'close': 'this.close',
+        'open': 'this.open',
+        'high': 'this.high',
+        'low': 'this.low',
+        'volume': 'this.volume',
+        'position': 'this.position',
+        'capital': 'this.capital'
+      }
+    };
+
+    return mappings[this.options.target]?.[id] || id;
+  }
+
+  private mapOperator(op: string): string {
+    const opMap: Record<string, string> = {
+      'and': this.options.target === 'python' ? 'and' : '&&',
+      'or': this.options.target === 'python' ? 'or' : '||',
+      'not': this.options.target === 'python' ? 'not' : '!',
+      'in': this.options.target === 'python' ? 'in' : '.includes'
+    };
+    return opMap[op] || op;
+  }
+
+  private generateImports(imports: AST.ImportDecl[]): string {
+    const parts: string[] = [];
+
+    if (this.options.target === 'python') {
+      for (const imp of imports) {
+        if (imp.items && imp.items.length > 0) {
+          const items = imp.items.map(item => 
+            item.alias ? `${item.name} as ${item.alias}` : item.name
+          ).join(', ');
+          parts.push(`from ${imp.source} import ${items}`);
+        } else if (imp.alias) {
+          parts.push(`import ${imp.source} as ${imp.alias}`);
+        } else {
+          parts.push(`import ${imp.source}`);
+        }
+      }
+    } else if (this.options.target === 'typescript') {
+      for (const imp of imports) {
+        if (imp.items && imp.items.length > 0) {
+          const items = imp.items.map(item => 
+            item.alias ? `${item.name} as ${item.alias}` : item.name
+          ).join(', ');
+          parts.push(`import { ${items} } from '${imp.source}';`);
+        } else if (imp.alias) {
+          parts.push(`import * as ${imp.alias} from '${imp.source}';`);
+        } else {
+          parts.push(`import '${imp.source}';`);
+        }
+      }
+    }
+
+    return parts.join('\n');
+  }
+
+  private wrapWithHeaders(code: string): string {
+    const headers: string[] = [];
+
+    if (this.options.target === 'python') {
+      headers.push('# Generated by CroweLang Compiler');
+      headers.push('# Do not edit this file directly');
+      headers.push('');
+      headers.push('from typing import List, Dict, Optional, Any');
+      headers.push('from dataclasses import dataclass');
+      headers.push('from datetime import datetime');
+      headers.push('import numpy as np');
+      headers.push('import pandas as pd');
+      headers.push('');
+      headers.push('from crowelang.runtime import BaseStrategy, BacktestEngine, BacktestConfig');
+      headers.push('from crowelang.indicators import *');
+      headers.push('');
+
+    } else if (this.options.target === 'typescript') {
+      headers.push('// Generated by CroweLang Compiler');
+      headers.push('// Do not edit this file directly');
+      headers.push('');
+      headers.push('import { BaseStrategy, BacktestEngine, BacktestConfig } from "crowelang/runtime";');
+      headers.push('import * as indicators from "crowelang/indicators";');
+      headers.push('import { Bar, Tick, OrderBook, Position } from "crowelang/types";');
+      headers.push('');
+    }
+
+    return headers.join('\n') + code;
+  }
+}

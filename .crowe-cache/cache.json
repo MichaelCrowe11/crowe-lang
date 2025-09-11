@@ -5,5 +5,12 @@
     "compiledOutput": "import * as React from 'react';\n\nexport function HelloWorld() {\n  const [message, setMessage] = React.useState<string>(\"Hello, World\\!\");\n  return ( <div>{message}</div> );\n}\n",
     "timestamp": 1757443493018,
     "dependencies": []
+  },
+  "examples/hello.crowe": {
+    "source": "component HelloWorld(props: { initial?: number }) {\n  state count: number = props.initial ?? 0;\n\n  computed doubled: number { return count * 2; }\n  computed memoTripled: number (deps: [count]) { return count * 3; }\n\n  effect onMount { console.log('mounted'); }\n\n  action increment() { count = count + 1; }\n  action add(delta: number) { count = count + delta; }\n\n  render {\n    <div style={{ padding: 12 }}>\n      <h1>Hello crowe‑lang</h1>\n      <p>count: {count}</p>\n      <p>doubled (IIFE): {doubled}</p>\n      <p>tripled (memo): {memoTripled}</p>\n      <button onClick={() => increment()}>+1</button>\n      <button onClick={() => add(5)}>+5</button>\n    </div>\n  }\n}",
+    "sourceHash": "7bd7e09afae8b8fbe8c26150c51afcf0",
+    "compiledOutput": "import * as React from 'react';\n\nexport function HelloWorld(props: { initial?: number }) {\n  const [count, setCount] = React.useState<number>(props.initial ?? 0);\n  const doubled = (() => { return count * 2; })();\n  const memoTripled = React.useMemo(() => { return count * 3; }, [count]);\n  React.useEffect(() => { console.log('mounted'); }, []);\n  function increment() { setCount(count + 1); }\n  function add(delta: number) { setCount(count + delta); }\n  return ( <div style={{ padding: 12 }}>\n      <h1>Hello crowe‑lang</h1>\n      <p>count: {count}</p>\n      <p>doubled (IIFE): {doubled}</p>\n      <p>tripled (memo): {memoTripled}</p>\n      <button onClick={() => increment()}>+1</button>\n      <button onClick={() => add(5)}>+5</button>\n    </div> );\n}\n",
+    "timestamp": 1757452525667,
+    "dependencies": []
   }
 }
