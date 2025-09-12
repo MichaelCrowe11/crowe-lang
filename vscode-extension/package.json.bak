@@ -2,8 +2,8 @@
   "name": "crowelang",
   "displayName": "CroweLang - Quantitative Trading DSL",
   "description": "Language support for CroweLang quantitative trading strategies",
-  "version": "1.0.0",
-  "publisher": "MichaelBenjaminCrowe",
+  "version": "0.1.0",
+  "publisher": "croweai",
   "icon": "icons/crowelang-icon.png",
   "galleryBanner": {
     "color": "#1a365d",
@@ -17,7 +17,7 @@
     "url": "https://github.com/croweai/crowelang/issues"
   },
   "homepage": "https://crowelang.com",
-  "license": "SEE LICENSE IN LICENSE",
+  "license": "MIT",
   "keywords": [
     "trading",
     "quantitative",

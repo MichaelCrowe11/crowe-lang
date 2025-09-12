@@ -1,0 +1,40 @@
+[package]
+name = "crowelang"
+version = "1.0.0"
+edition = "2021"
+description = "CroweLang - Professional quantitative trading DSL compiler and runtime"
+authors = ["Michael Benjamin Crowe <michael.crowe@crowelang.com>"]
+license-file = "LICENSE"
+repository = "https://github.com/MichaelCrowe11/crowe-lang"
+homepage = "https://crowelang.com"
+documentation = "https://docs.rs/crowelang"
+keywords = ["trading", "finance", "quantitative", "dsl", "compiler"]
+categories = ["compilers", "finance", "development-tools"]
+readme = "README.md"
+
+[lib]
+name = "crowelang"
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "crowe"
+path = "src/bin/crowe.rs"
+
+[dependencies]
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+tokio = { version = "1.0", features = ["full"] }
+clap = { version = "4.0", features = ["derive"] }
+anyhow = "1.0"
+thiserror = "1.0"
+
+[dev-dependencies]
+tokio-test = "0.4"
+
+[features]
+default = ["compiler"]
+compiler = []
+runtime = []
+
+[package.metadata.docs.rs]
+all-features = true

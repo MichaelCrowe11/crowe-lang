@@ -1,0 +1,11 @@
+{
+  "name": "crowelang-monorepo",
+  "version": "0.1.0",
+  "description": "CroweLang - Quantitative Trading DSL",
+  "private": true,
+  "scripts": {
+    "build": "cd packages/compiler && npm run build && cd ../runtime && npm run build && cd ../cli && npm run build",
+    "test": "cd packages/compiler && npm test && cd ../runtime && npm test",
+    "clean": "rm -rf packages/*/dist packages/*/node_modules"
+  }
+}

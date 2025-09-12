@@ -1,0 +1,12 @@
+include README.md
+include LICENSE
+include MONETIZATION_STRATEGY_2025.md
+include requirements.txt
+recursive-include python/crowelang *.py
+recursive-include examples *.crowe
+recursive-include docs *.md
+prune test
+prune node_modules
+prune .git
+exclude *.log
+exclude .DS_Store

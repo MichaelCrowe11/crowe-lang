@@ -1,11 +1,31 @@
 {
-  "name": "crowelang-monorepo",
-  "version": "0.1.0",
-  "description": "CroweLang - Quantitative Trading DSL",
-  "private": true,
+  "name": "crowelang",
+  "version": "1.0.0",
+  "description": "CroweLang - Professional Quantitative Trading DSL",
+  "main": "dist/index.js",
+  "bin": {
+    "crowelang": "dist/cli.js",
+    "crowe": "dist/cli.js"
+  },
   "scripts": {
-    "build": "cd packages/compiler && npm run build && cd ../runtime && npm run build && cd ../cli && npm run build",
-    "test": "cd packages/compiler && npm test && cd ../runtime && npm test",
-    "clean": "rm -rf packages/*/dist packages/*/node_modules"
-  }
+    "build": "tsc",
+    "test": "jest",
+    "prepublish": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/MichaelCrowe11/crowe-lang.git"
+  },
+  "keywords": [
+    "trading",
+    "quantitative",
+    "finance",
+    "strategy", 
+    "dsl",
+    "compiler",
+    "algotrading"
+  ],
+  "author": "Michael Benjamin Crowe <michael.crowe@crowelang.com>",
+  "license": "SEE LICENSE IN LICENSE",
+  "homepage": "https://crowelang.com"
 }
