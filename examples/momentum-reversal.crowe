@@ -1,0 +1,85 @@
+// Momentum Reversal Strategy
+// Combines RSI oversold/overbought with price momentum
+
+strategy MomentumReversal {
+  params {
+    rsi_period: int = 14
+    rsi_oversold: float = 30.0
+    rsi_overbought: float = 70.0
+    momentum_period: int = 5
+    position_size: float = 0.5  // Use 50% of capital per trade
+  }
+  
+  indicators {
+    rsi = RSI(close, rsi_period)
+    momentum = close - close[momentum_period]
+    price_sma = SMA(close, 20)
+    atr = ATR(high, low, close, 14)
+  }
+  
+  signals {
+    // Reversal signals
+    oversold_reversal = rsi < rsi_oversold and momentum < 0 and close < price_sma
+    overbought_reversal = rsi > rsi_overbought and momentum > 0 and close > price_sma
+    
+    // Confirmation signals
+    bullish_confirm = close > open and volume > SMA(volume, 10)
+    bearish_confirm = close < open and volume > SMA(volume, 10)
+    
+    // Exit signals
+    rsi_neutral = rsi > 45 and rsi < 55
+  }
+  
+  rules {
+    // Enter long on oversold reversal
+    when (oversold_reversal and bullish_confirm and position == 0) {
+      quantity = (capital * position_size) / close
+      buy(quantity)
+    }
+    
+    // Enter short on overbought reversal
+    when (overbought_reversal and bearish_confirm and position == 0) {
+      quantity = (capital * position_size) / close
+      short(quantity)
+    }
+    
+    // Exit long positions
+    when (position > 0 and (rsi_neutral or rsi > rsi_overbought)) {
+      sell(position)
+    }
+    
+    // Exit short positions
+    when (position < 0 and (rsi_neutral or rsi < rsi_oversold)) {
+      cover(abs(position))
+    }
+  }
+  
+  risk {
+    max_position = 0.8 * capital
+    stop_loss = 2.5 * atr  // Dynamic stop based on ATR
+    take_profit = 1.5 * atr  // Take profit at 1.5x ATR
+    max_daily_loss = 0.02  // 2% daily loss limit
+  }
+}
+
+backtest MomentumReversalBacktest {
+  data_source = "mock"
+  start_date = "2022-01-01"
+  end_date = "2023-12-31"
+  initial_capital = 50000
+  
+  universe = ["AAPL", "GOOGL", "TSLA", "MSFT"]
+  frequency = HOUR
+  
+  costs {
+    commission = 0.005
+    slippage = SquareRootSlippage(0.001)
+  }
+  
+  output {
+    metrics = true
+    trades = true
+    equity_curve = true
+    drawdown_series = true
+  }
+}

@@ -1,0 +1,119 @@
+// Statistical Arbitrage - Pairs Trading Strategy
+// Trades mean reversion between correlated instruments
+
+strategy PairsTrading {
+  params {
+    lookback_period: int = 60
+    entry_zscore: float = 2.0
+    exit_zscore: float = 0.5
+    correlation_threshold: float = 0.8
+    position_size: float = 0.25  // 25% per leg
+  }
+  
+  data {
+    Pair {
+      symbol_a: string
+      symbol_b: string
+      hedge_ratio: float
+      spread: float
+      correlation: float
+    }
+  }
+  
+  indicators {
+    // For each pair, calculate spread and statistics
+    spread = log(price_a) - hedge_ratio * log(price_b)
+    spread_ma = SMA(spread, lookback_period)
+    spread_std = STDEV(spread, lookback_period)
+    zscore = (spread - spread_ma) / spread_std
+    correlation = CORREL(price_a, price_b, lookback_period)
+  }
+  
+  signals {
+    // Entry signals
+    long_spread = zscore < -entry_zscore and correlation > correlation_threshold
+    short_spread = zscore > entry_zscore and correlation > correlation_threshold
+    
+    // Exit signals
+    close_long = zscore > -exit_zscore
+    close_short = zscore < exit_zscore
+    
+    // Risk signals
+    correlation_break = correlation < correlation_threshold
+  }
+  
+  rules {
+    // Enter long spread (buy A, sell B)
+    when (long_spread and position_a == 0 and position_b == 0) {
+      quantity_a = (capital * position_size) / price_a
+      quantity_b = quantity_a * hedge_ratio
+      
+      buy_a(quantity_a)
+      short_b(quantity_b)
+    }
+    
+    // Enter short spread (sell A, buy B)  
+    when (short_spread and position_a == 0 and position_b == 0) {
+      quantity_a = (capital * position_size) / price_a
+      quantity_b = quantity_a * hedge_ratio
+      
+      short_a(quantity_a)
+      buy_b(quantity_b)
+    }
+    
+    // Close long spread position
+    when ((close_long or correlation_break) and position_a > 0) {
+      sell_a(position_a)
+      cover_b(abs(position_b))
+    }
+    
+    // Close short spread position
+    when ((close_short or correlation_break) and position_a < 0) {
+      cover_a(abs(position_a))
+      sell_b(position_b)
+    }
+  }
+  
+  risk {
+    max_pairs = 5
+    max_position_per_pair = 0.3 * capital
+    max_correlation_decay = 0.2  // Stop if correlation drops by 20%
+    max_holding_period = 30  // Force exit after 30 periods
+  }
+}
+
+// Portfolio of pairs to trade
+portfolio PairsPortfolio {
+  pairs = [
+    Pair("AAPL", "MSFT", 1.2),
+    Pair("JPM", "BAC", 0.8),
+    Pair("XOM", "CVX", 1.1),
+    Pair("KO", "PEP", 1.0)
+  ]
+  
+  rebalance_frequency = WEEKLY
+}
+
+backtest PairsTradingBacktest {
+  data_source = "mock"
+  start_date = "2021-01-01"
+  end_date = "2023-12-31"
+  initial_capital = 200000
+  
+  universe = ["AAPL", "MSFT", "JPM", "BAC", "XOM", "CVX", "KO", "PEP"]
+  frequency = DAY
+  
+  costs {
+    commission = 0.002
+    slippage = LinearSlippage(0.001)
+    borrowing_cost = 0.03  // 3% annual rate for shorts
+  }
+  
+  output {
+    metrics = true
+    trades = true
+    equity_curve = true
+    correlation_matrix = true
+    pair_performance = true
+  }
+}

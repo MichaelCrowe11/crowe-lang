@@ -294,4 +294,74 @@ export class Indicators {
     
     return result;
   }
+
+  // Correlation coefficient
+  static CORREL(seriesA: number[], seriesB: number[], period: number): number {
+    if (seriesA.length < period || seriesB.length < period) return NaN;
+    
+    const sliceA = seriesA.slice(-period);
+    const sliceB = seriesB.slice(-period);
+    
+    const meanA = this.SMA(sliceA, period);
+    const meanB = this.SMA(sliceB, period);
+    
+    let numerator = 0;
+    let sumSquareA = 0;
+    let sumSquareB = 0;
+    
+    for (let i = 0; i < period; i++) {
+      const diffA = sliceA[i] - meanA;
+      const diffB = sliceB[i] - meanB;
+      
+      numerator += diffA * diffB;
+      sumSquareA += diffA * diffA;
+      sumSquareB += diffB * diffB;
+    }
+    
+    const denominator = Math.sqrt(sumSquareA * sumSquareB);
+    return denominator === 0 ? NaN : numerator / denominator;
+  }
+}
+// Export individual functions for easier use
+export const SMA = Indicators.SMA.bind(Indicators);
+export const EMA = Indicators.EMA.bind(Indicators);
+export const RSI = Indicators.RSI.bind(Indicators);
+export const MACD = Indicators.MACD.bind(Indicators);
+export const BollingerBands = Indicators.BollingerBands.bind(Indicators);
+export const ATR = Indicators.ATR.bind(Indicators);
+export const STDEV = Indicators.StdDev.bind(Indicators);
+export const Stochastic = Indicators.Stochastic.bind(Indicators);
+export const VWAP = Indicators.VWAP.bind(Indicators);
+export const OBV = Indicators.OBV.bind(Indicators);
+export const CCI = Indicators.CCI.bind(Indicators);
+export const WilliamsR = Indicators.WilliamsR.bind(Indicators);
+export const MFI = Indicators.MFI.bind(Indicators);
+export const ParabolicSAR = Indicators.ParabolicSAR.bind(Indicators);
+export const CORREL = Indicators.CORREL.bind(Indicators);
+
+// Helper functions for common patterns
+export function crossover(fastSeries: number, slowSeries: number, fastSeriesPrev: number, slowSeriesPrev: number): boolean {
+  return fastSeries > slowSeries && fastSeriesPrev <= slowSeriesPrev;
+}
+
+export function crossunder(fastSeries: number, slowSeries: number, fastSeriesPrev: number, slowSeriesPrev: number): boolean {
+  return fastSeries < slowSeries && fastSeriesPrev >= slowSeriesPrev;
+}
+
+export function highest(series: number[], period: number): number {
+  if (series.length < period) return NaN;
+  return Math.max(...series.slice(-period));
+}
+
+export function lowest(series: number[], period: number): number {
+  if (series.length < period) return NaN;
+  return Math.min(...series.slice(-period));
+}
+
+export function change(current: number, previous: number): number {
+  return current - previous;
+}
+
+export function percentChange(current: number, previous: number): number {
+  return previous === 0 ? 0 : ((current - previous) / previous) * 100;
 }

@@ -1,0 +1,135 @@
+// Volatility Breakout Strategy
+// Trades on sudden volatility expansion with trend confirmation
+
+strategy VolatilityBreakout {
+  params {
+    atr_period: int = 20
+    volatility_multiplier: float = 2.5
+    trend_period: int = 50
+    volume_multiplier: float = 1.5
+    position_size: float = 0.3
+  }
+  
+  indicators {
+    atr = ATR(high, low, close, atr_period)
+    bb_upper = BollingerBands(close, 20, 2.0).upper
+    bb_lower = BollingerBands(close, 20, 2.0).lower
+    bb_width = (bb_upper - bb_lower) / SMA(close, 20)
+    
+    trend_ma = EMA(close, trend_period)
+    volume_ma = SMA(volume, 20)
+    
+    // Volatility expansion detection
+    volatility_expansion = atr > SMA(atr, 10) * volatility_multiplier
+    volume_surge = volume > volume_ma * volume_multiplier
+  }
+  
+  signals {
+    // Breakout signals
+    bullish_breakout = close > bb_upper and close > trend_ma and volatility_expansion
+    bearish_breakout = close < bb_lower and close < trend_ma and volatility_expansion
+    
+    // Confirmation
+    volume_confirm = volume_surge
+    momentum_confirm = abs(close - open) > atr * 0.5
+    
+    // Exit conditions
+    volatility_contraction = atr < SMA(atr, 10) * 0.8
+    mean_reversion = (close > bb_lower and close < bb_upper)
+  }
+  
+  rules {
+    // Enter long on bullish breakout
+    when (bullish_breakout and volume_confirm and momentum_confirm and position <= 0) {
+      if (position < 0) {
+        cover(abs(position))  // Close short first
+      }
+      
+      quantity = (capital * position_size) / close
+      buy(quantity)
+    }
+    
+    // Enter short on bearish breakout  
+    when (bearish_breakout and volume_confirm and momentum_confirm and position >= 0) {
+      if (position > 0) {
+        sell(position)  // Close long first
+      }
+      
+      quantity = (capital * position_size) / close
+      short(quantity)
+    }
+    
+    // Exit long positions
+    when (position > 0 and (volatility_contraction or mean_reversion)) {
+      sell(position)
+    }
+    
+    // Exit short positions
+    when (position < 0 and (volatility_contraction or mean_reversion)) {
+      cover(abs(position))
+    }
+  }
+  
+  risk {
+    max_position = 0.5 * capital
+    stop_loss = 3.0 * atr  // Dynamic stop loss
+    take_profit = 2.0 * atr  // Take profit target
+    max_holding_days = 10  // Force exit after 10 days
+    
+    // Volatility-based position sizing
+    volatility_adjusted_size = min(position_size, 0.1 / (atr / close))
+  }
+}
+
+// Multi-timeframe analysis
+strategy VolatilityBreakoutMultiTF extends VolatilityBreakout {
+  timeframes {
+    primary = HOUR
+    confirmation = "4HOUR" 
+    trend = DAY
+  }
+  
+  // Override with multi-timeframe logic
+  signals {
+    // Primary timeframe breakout
+    primary_breakout = VolatilityBreakout.bullish_breakout@HOUR
+    
+    // Higher timeframe confirmation
+    trend_aligned = close > trend_ma@DAY
+    higher_tf_momentum = close@"4HOUR" > open@"4HOUR"
+    
+    // Combined signal
+    confirmed_breakout = primary_breakout and trend_aligned and higher_tf_momentum
+  }
+}
+
+backtest VolatilityBreakoutBacktest {
+  data_source = "mock" 
+  start_date = "2022-06-01"
+  end_date = "2023-12-31"
+  initial_capital = 75000
+  
+  universe = ["SPY", "QQQ", "IWM", "GLD", "TLT"]
+  frequency = HOUR
+  
+  costs {
+    commission = 0.003
+    slippage = SquareRootSlippage(0.0015)
+  }
+  
+  // Advanced analysis
+  analytics {
+    regime_detection = true
+    volatility_clustering = true
+    breakout_success_rate = true
+    time_of_day_analysis = true
+  }
+  
+  output {
+    metrics = true
+    trades = true
+    equity_curve = true
+    volatility_analysis = true
+    regime_performance = true
+  }
+}

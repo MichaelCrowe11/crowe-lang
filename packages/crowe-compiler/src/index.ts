@@ -1,5 +1,6 @@
 import { parseCrowe } from './parser';
 import { generateReactTSX, CodeGenOptions } from './codegen.react';
+import { generatePython, PythonCodeGenOptions } from './codegen.python';
 import { CompilerCache } from './cache';
 import { measure, globalTimer, globalMemory, formatMs } from './performance';
 import * as path from 'path';
@@ -9,6 +10,8 @@ export interface CompileOptions extends CodeGenOptions {
   useCache?: boolean;
   cacheDir?: string;
   enableProfiling?: boolean;
+  target?: 'react' | 'python' | 'typescript';
+  croweTrade?: boolean;
 }
 
 export interface CompileResult {
@@ -148,4 +151,108 @@ export function formatPerformanceStats(): string {
   return lines.join('\n');
 }
 
-export { parseCrowe, generateReactTSX };
+export function compileCroweToPython(source: string, options: CompileOptions = {}): string {
+  const result = compileCroweToPythonWithStats(source, options);
+  return result.output;
+}
+
+export function compileCroweToPythonWithStats(source: string, options: CompileOptions = {}): CompileResult {
+  const startTime = performance.now();
+  const enableProfiling = options.enableProfiling || false;
+  const useCache = options.useCache !== false;
+  const filename = options.filename || 'anonymous';
+  
+  if (enableProfiling) {
+    globalMemory.snapshot('compile-start');
+  }
+
+  // Initialize cache if needed
+  if (useCache && !cache) {
+    cache = new CompilerCache(options.cacheDir);
+  }
+
+  // Check cache first
+  const cacheKey = `${filename}_python${options.croweTrade ? '_crowetrade' : ''}`;
+  if (useCache && cache && cache.isValid(cacheKey, source)) {
+    const cached = cache.get(cacheKey)!;
+    const totalTime = performance.now() - startTime;
+    
+    return {
+      output: cached.compiledOutput,
+      sourceMap: cached.sourceMap,
+      stats: enableProfiling ? {
+        parseTime: 0,
+        codegenTime: 0,
+        totalTime,
+        cacheHit: true,
+        memoryUsed: '0 B'
+      } : undefined
+    };
+  }
+
+  // Parse AST
+  const parseStart = performance.now();
+  const ast = measure('parse', () => parseCrowe(source, filename));
+  const parseTime = performance.now() - parseStart;
+
+  if (enableProfiling) {
+    globalMemory.snapshot('parse-complete');
+  }
+
+  // Generate Python code
+  const codegenStart = performance.now();
+  const pythonOptions: PythonCodeGenOptions = {
+    ...options,
+    originalSource: source,
+    sourcePath: filename,
+    croweTrade: options.croweTrade
+  };
+  
+  const output = measure('codegen-python', () => generatePython(ast, pythonOptions));
+  const codegenTime = performance.now() - codegenStart;
+
+  if (enableProfiling) {
+    globalMemory.snapshot('codegen-complete');
+  }
+
+  // Cache the result
+  if (useCache && cache) {
+    cache.set(cacheKey, source, output, undefined, []);
+  }
+
+  const totalTime = performance.now() - startTime;
+
+  let memoryUsed: string | undefined;
+  if (enableProfiling) {
+    const memDiff = globalMemory.getDiff('compile-start', 'codegen-complete');
+    if (memDiff) {
+      memoryUsed = globalMemory.formatBytes(memDiff.heapUsed);
+    }
+  }
+
+  return {
+    output,
+    stats: enableProfiling ? {
+      parseTime,
+      codegenTime, 
+      totalTime,
+      cacheHit: false,
+      memoryUsed
+    } : undefined
+  };
+}
+
+export function compileCrowe(source: string, options: CompileOptions = {}): string {
+  const target = options.target || 'react';
+  
+  switch (target) {
+    case 'python':
+      return compileCroweToPython(source, options);
+    case 'react':
+    case 'typescript':
+    default:
+      return compileCroweToReactTSX(source, options);
+  }
+}
+
+export { parseCrowe, generateReactTSX, generatePython };

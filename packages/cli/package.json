@@ -1,26 +1,29 @@
 {
   "name": "@crowelang/cli",
   "version": "0.1.0",
-  "description": "CroweLang CLI for compiling and backtesting trading strategies",
-  "main": "dist/index.js",
+  "description": "CroweLang command-line interface",
   "bin": {
-    "crowelang": "./dist/index.js"
+    "crowe": "dist/index.js"
   },
+  "type": "module",
+  "main": "dist/index.js",
+  "files": ["dist"],
   "scripts": {
-    "build": "tsc",
-    "dev": "ts-node src/index.ts",
-    "test": "jest"
+    "build": "tsc -b",
+    "dev": "tsx src/index.ts",
+    "clean": "rimraf dist"
   },
   "dependencies": {
-    "chalk": "^5.3.0",
-    "commander": "^11.1.0",
-    "ora": "^7.0.1",
-    "inquirer": "^9.2.12"
+    "@crowelang/compiler": "workspace:*",
+    "@crowelang/runtime": "workspace:*",
+    "commander": "^12.1.0",
+    "chalk": "^5.3.0"
   },
   "devDependencies": {
     "@types/node": "^20.10.0",
-    "@types/inquirer": "^9.0.7",
     "typescript": "^5.3.0",
-    "ts-node": "^10.9.0"
+    "tsx": "^4.0.0",
+    "rimraf": "^5.0.0",
+    "vitest": "^1.0.0"
   }
 }
