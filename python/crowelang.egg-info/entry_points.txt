@@ -1,0 +1,3 @@
+[console_scripts]
+crowe = crowelang.cli:main
+crowelang = crowelang.cli:main
